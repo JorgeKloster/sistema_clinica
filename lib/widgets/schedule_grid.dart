@@ -26,7 +26,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     DateTime scheduleStartTime = actualDateTime.subtract(
       const Duration(days: 180),
     );
-    DateTime scheduleEndTime = actualDateTime.add(const Duration(days: 180));
+    int scheduleEndTime = 360;
 
     return SizedBox(
       width: 1000,
@@ -80,8 +80,8 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                       children: [
                         Row(
                           spacing: 4,
-                          children: List.generate(days, (dayOffset) {
-                            DateTime date = actualDateTime.add(
+                          children: List.generate(scheduleEndTime, (dayOffset) {
+                            DateTime date = scheduleStartTime.add(
                               Duration(days: dayOffset),
                             );
                             return Container(
@@ -103,7 +103,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                         ),
                         Expanded(
                           child: Row(
-                            children: List.generate(days, (day) {
+                            children: List.generate(scheduleEndTime, (day) {
                               return Column(
                                 children: List.generate(hours, (hour) {
                                   return Container(
