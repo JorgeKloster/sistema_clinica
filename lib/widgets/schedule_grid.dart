@@ -12,7 +12,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   final DateTime actualDateTime = DateTime.now();
   double columnWidth = 120;
   int days = 50;
-  int hours = 12;
+  int hours = 16;
+  int totalDays = 360;
+  final ScrollController _scrollController = ScrollController();
 
   void _updateWidth(double delta) {
     setState(() {
@@ -26,40 +28,18 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     DateTime scheduleStartTime = actualDateTime.subtract(
       const Duration(days: 180),
     );
-    int scheduleEndTime = 360;
 
     return SizedBox(
       width: 1000,
-      height: 1200,
-      child: Row(
-        children: [
-          // 🔹 Static left column with hours
-          Column(
-            spacing: 4,
-            children: [
-              const SizedBox(height: 18), // space for date header row
-              ...List.generate(hours, (hourOffset) {
-                return Container(
-                  width: 60,
-                  height: 20,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade400),
-                    color: Colors.grey.shade200,
-                  ),
-                  child: Text("${9 + hourOffset}:00"),
-                );
-              }),
-            ],
-          ),
-
-          // 🔹 Scrollable right side with dates + grid
-          Expanded(
-            child: GestureDetector(
+      height: 500,
+      child: GestureDetector(
               onScaleUpdate: (details) {
                 // pinch zoom on touch
                 _updateWidth((details.scale - 1) * 10);
               },
+              onHorizontalDragUpdate: (details) => _scrollController.jumpTo(
+                _scrollController.offset - details.delta.dx,
+              ),
               child: Listener(
                 onPointerSignal: (event) {
                   if (event is PointerScrollEvent) {
@@ -67,72 +47,60 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                     _updateWidth(-event.scrollDelta.dy * 0.2);
                   }
                 },
-                child: InteractiveViewer(
-                  panEnabled: true, // drag horizontally/vertically
-                  panAxis: PanAxis.horizontal,
-                  scaleEnabled: false, // pinch to zoom
-                  minScale: 0.5,
-                  maxScale: 2.5,
-                  boundaryMargin: EdgeInsets.all(double.infinity),
-                  child: OverflowBox(
-                    maxWidth: double.infinity,
-                    child: Column(
-                      children: [
-                        Row(
-                          spacing: 4,
-                          children: List.generate(scheduleEndTime, (dayOffset) {
-                            DateTime date = scheduleStartTime.add(
-                              Duration(days: dayOffset),
-                            );
-                            return Container(
-                              width: columnWidth,
-                              height: 20,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey.shade400),
-                                color: Colors.blue.shade50,
-                              ),
-                              child: Text(
-                                "${date.day}/${date.month}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            );
-                          }),
-                        ),
-                        Expanded(
-                          child: Row(
-                            children: List.generate(scheduleEndTime, (day) {
-                              return Column(
-                                children: List.generate(hours, (hour) {
-                                  return Container(
-                                    width: columnWidth,
-                                    height: 20,
-                                    margin: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: Colors.grey.shade400,
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Text("${9 + hour}:00"),
-                                    ),
-                                  );
-                                }),
-                              );
-                            }),
-                          ),
-                        ),
-                      ],
+                child: Scrollbar(
+                  controller: _scrollController, // 👈 add a controller
+                  thumbVisibility: true,         // 👈 always show scrollbar
+                  child:GridView.builder(
+                    controller: _scrollController,
+                    scrollDirection: Axis.horizontal,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: hours, // rows = hours
+                      childAspectRatio: columnWidth / 300, // width vs height
                     ),
+                    itemCount: totalDays * hours,// pre-cache items for smoother scrolling
+                    itemBuilder: (context, index) {
+                      int dayOffset = index ~/ hours;
+                      int hourOffset = index % hours;
+                      DateTime date =
+                          scheduleStartTime.add(Duration(days: dayOffset));
+
+                      if (hourOffset == 0) {
+                        // Date header at top of each column
+                        return Container(
+                          width: columnWidth,
+                          height: 40,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade400),
+                            color: Colors.blue.shade50,
+                          ),
+                          child: Text(
+                            "${date.day}/${date.month}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      }
+
+                      // Hour cells
+                      return Container(
+                        width: columnWidth,
+                        height: 40,
+                        margin: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade400),
+                          color: Colors.grey.shade100,
+                        ),
+                        child: Center(
+                          child: Text("${8 + hourOffset}:00"),
+                        ),
+                      );
+                    },
                   ),
-                ),
               ),
             ),
           ),
-        ],
-      ),
-    );
+      );
   }
 }
