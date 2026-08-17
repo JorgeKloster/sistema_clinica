@@ -1,7 +1,7 @@
 class Appointment {
-  final String id;
-  final String patientId;
-  final String doctorId; // could be doctor, dentist, physiotherapist
+  final int id;
+  final int patientId;
+  final int doctorId; // could be doctor, dentist, physiotherapist
   final DateTime date;
   final DateTime startTime;
   final DateTime endTime;
