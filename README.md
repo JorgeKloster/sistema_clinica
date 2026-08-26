@@ -1,16 +1,30 @@
-# controle_clinica
+# Controle Clinica
 
-A new Flutter project.
+Projeto de criação de um sistema para clínicas integradas.
 
-## Getting Started
+## Definição de Infra Inicial
 
-This project is a starting point for a Flutter application.
+1. Firebase - Sem custo, para uso durante o desenvolvimento
+2. VPS - Deploy de primeira versão para uso em clínica
+3. Futuramente migração para AWS, podendo escalar a aplicação de tamanho
 
-A few resources to get you started if this is your first Flutter project:
+## Definição de Banco de Dados e Back-end
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Bancos de Dados
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+#### SQL
+
+PostgreSQL - Dados na nuvem
+
+SQLite - Dados OFFLINE
+
+#### noSQL
+
+MongoDB -  exames digitalizados, imagens odontológicas, relatórios em PDF, registros de acesso, histórico de alterações em prontuários
+
+Redis - acelerar consultas de agenda e disponibilidade, fila de sincronização
+
+### Linguagem Back-End
+
+Go
+
