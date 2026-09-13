@@ -66,7 +66,7 @@ class BasePage extends StatelessWidget {
           ),
         ],
       ),
-      drawer: Sidebar(userRole: userRole),
+      drawer: Sidebar(userRole: "administrator"),
       body: body,
     );
   }

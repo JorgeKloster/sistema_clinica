@@ -39,6 +39,18 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     ),
     Appointment(
       id: 2,
+      patientId: 4,
+      patientName: "Lucas Souza",
+      doctorId: 3,
+      doctorName: "Dra. Marília",
+      date: DateTime(2026, 8, 23),
+      startTime: DateTime(2026, 8, 23, 8),
+      endTime: DateTime(2026, 8, 23, 9),
+      type: "Consulta",
+      notes: "",
+    ),
+    Appointment(
+      id: 3,
       patientId: 2,
       patientName: "Lucas Oliveira",
       doctorId: 2,
@@ -50,7 +62,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       notes: "",
     ),
     Appointment(
-      id: 3,
+      id: 4,
       patientId: 3,
       patientName: "Maria Silva",
       doctorId: 3,
