@@ -1,33 +1,41 @@
 class Patient {
   final String id;
+  final int clinicId;
   final String name;
-  final int age;
+  final int birthDate;
   final String gender;
-  final String contactInfo;
+  final String phone;
+  final String email;
 
   Patient({
     required this.id,
+    required this.clinicId,
     required this.name,
-    required this.age,
+    required this.birthDate,
     required this.gender,
-    required this.contactInfo,
+    required this.phone,
+    required this.email,
   });
 
   factory Patient.fromJson(Map<String, dynamic> json) {
     return Patient(
       id: json['id'],
+      clinicId: json['clinicId'],
       name: json['name'],
-      age: json['age'],
+      birthDate: json['birthDate'],
       gender: json['gender'],
-      contactInfo: json['contactInfo'],
+      phone: json['phone'],
+      email: json['email'],
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
+    'clinicId': clinicId,
     'name': name,
-    'age': age,
+    'birthDate': birthDate,
     'gender': gender,
-    'contactInfo': contactInfo,
+    'phone': phone,
+    'email': email,
   };
 }
