@@ -1,3 +1,4 @@
+import 'package:controle_clinica/pages/common/patients_page.dart';
 import 'package:controle_clinica/pages/common/schedule_page.dart';
 import 'package:controle_clinica/pages/dentist/dentist_homepage.dart';
 import 'package:controle_clinica/pages/login/login_page.dart';
@@ -18,6 +19,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginPage(),
         '/dentist_home': (context) => DentistHomePage(),
         '/schedule': (context) => SchedulePage(),
+        '/patients': (context) => PatientsPage(),
       },
     );
   }
