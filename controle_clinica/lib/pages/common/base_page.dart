@@ -5,12 +5,14 @@ class BasePage extends StatelessWidget {
   final String title;
   final Widget body;
   final String userRole;
+  final Widget? floatingActionButton;
 
   const BasePage({
     super.key,
     required this.title,
     required this.body,
     required this.userRole,
+    this.floatingActionButton,
   });
 
   @override
@@ -68,6 +70,7 @@ class BasePage extends StatelessWidget {
       ),
       drawer: Sidebar(userRole: "administrator"),
       body: body,
+      floatingActionButton: floatingActionButton,
     );
   }
 }

@@ -47,7 +47,7 @@ class Sidebar extends StatelessWidget {
               children: [
                 ListTile(
                   title: const Text("Pacientes"),
-                  onTap: () => Navigator.pushNamed(context, '/admin_patients'),
+                  onTap: () => Navigator.pushNamed(context, '/patients'),
                 ),
                 ListTile(
                   title: const Text("Profissionais"),
