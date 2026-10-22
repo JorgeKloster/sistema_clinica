@@ -6,9 +6,20 @@ import (
 	"go-backend/db"
 	"go-backend/models"
 	"net/http"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
+
+var jwtKey = []byte("your_secret_key") // keep safe, use env var
+
+type Claims struct {
+	UserID   int    `json:"user_id"`
+	ClinicID int    `json:"clinic_id"`
+	Role     string `json:"role"`
+	jwt.RegisteredClaims
+}
 
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var u models.Users
@@ -47,8 +58,8 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var storedHash string
-	var userID int
-	err := db.DB.QueryRow(`SELECT user_id, password_hash FROM users WHERE email = $1`, creds.Email).Scan(&userID, &storedHash)
+	var user models.Users
+	err := db.DB.QueryRow(`SELECT user_id, clinic_id, first_name, last_name, email, phone, role, specialty, password_hash, created_at, updated_at, updated_by FROM users WHERE email = $1`, creds.Email).Scan(&user.UserID, &user.ClinicID, &user.FirstName, &user.LastName, &user.Email, &user.Phone, &user.Role, &user.Specialty, &storedHash, &user.CreatedAt, &user.UpdatedAt, &user.UpdatedBy)
 	if err == sql.ErrNoRows {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
@@ -62,11 +73,29 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: issue JWT here
+	// Create JWT claims
+	expirationTime := time.Now().Add(24 * time.Hour)
+	claims := &Claims{
+		UserID:   user.UserID,
+		ClinicID: user.ClinicID,
+		Role:     user.Role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(jwtKey)
+	if err != nil {
+		http.Error(w, "Could not create token", http.StatusInternalServerError)
+		return
+	}
+
+	// Return token + user info
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "Login successful",
-		"user_id": userID,
+		"token": tokenString,
+		"user":  user,
 	})
 }
 

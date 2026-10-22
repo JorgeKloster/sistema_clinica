@@ -11,13 +11,13 @@ services:
       - "8080:8080"
     depends_on:
       - db
-    profiles: ["prod"]
+    profiles: [ "prod" ]
 
   backend-local:
     build: ./go-backend
     container_name: clinicSystem-backend
     environment:
-      DB_HOST: db
+      DB_HOST: db-local
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
@@ -25,7 +25,7 @@ services:
       - "8080:8080"
     depends_on:
       - db-local
-    profiles: ["dev"]
+    profiles: [ "dev" ]
 
   db:
     image: postgres:18
@@ -37,7 +37,7 @@ services:
       - "5432:5432"
     volumes:
       - ${DB_VOLUME}
-    profiles: ["prod"]
+    profiles: [ "prod" ]
 
   db-local:
     image: postgres:18
@@ -49,33 +49,25 @@ services:
       - "5432:5432"
     volumes:
       - ${DB_VOLUME}
-    profiles: ["dev"]
+    profiles: [ "dev" ]
 
   migrate:
     image: migrate/migrate
-    command: [
-      "-path", "/migrations",
-      "-database", "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable",
-      "up"
-    ]
+    command: [ "-path", "/migrations", "-database", "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable", "up" ]
     volumes:
       - ./go-backend/migrations:/migrations
     depends_on:
       - db
-    profiles: ["prod"]
+    profiles: [ "prod" ]
 
   migrate-local:
     image: migrate/migrate
-    command: [
-      "-path", "/migrations",
-      "-database", "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-local:5432/${POSTGRES_DB}?sslmode=disable",
-      "up"
-    ]
+    command: [ "-path", "/migrations", "-database", "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-local:5432/${POSTGRES_DB}?sslmode=disable", "up" ]
     volumes:
       - ./go-backend/migrations:/migrations
     depends_on:
       - db-local
-    profiles: ["dev"]
+    profiles: [ "dev" ]
 
 volumes:
   pgdata:

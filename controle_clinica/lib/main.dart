@@ -1,5 +1,6 @@
 import 'package:controle_clinica/pages/common/patients_page.dart';
 import 'package:controle_clinica/pages/common/schedule_page.dart';
+import 'package:controle_clinica/pages/common/splash_screen.dart';
 import 'package:controle_clinica/pages/dentist/dentist_homepage.dart';
 import 'package:controle_clinica/pages/login/login_page.dart';
 import 'package:flutter/material.dart';
@@ -14,8 +15,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login',
+      initialRoute: '/splash',
       routes: {
+        '/splash': (context) => const SplashScreen(),
         '/login': (context) => LoginPage(),
         '/dentist_home': (context) => DentistHomePage(),
         '/schedule': (context) => SchedulePage(),

@@ -1,3 +1,4 @@
+import 'package:controle_clinica/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -18,13 +19,21 @@ class _LoginPageState extends State<LoginPage> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
-      // Simulate authentication service call
-      await Future.delayed(Duration(seconds: 2));
+      final authService = AuthService();
+      final success = await authService.login(
+        _emailController.text,
+        _passwordController.text,
+      );
 
       setState(() => _isLoading = false);
 
-      // Example: Navigate to home after login
-      Navigator.pushReplacementNamed(context, '/dentist_home');
+      if (success) {
+        Navigator.pushReplacementNamed(context, '/dentist_home');
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Invalid email or password")));
+      }
     }
   }
 

@@ -13,7 +13,7 @@ var DB *sql.DB
 
 func Connect() {
 	// Load .env file from go-backend folder
-	err := godotenv.Load(".env")
+	err := godotenv.Load("db/.env")
 	if err != nil {
 		log.Println("Warning: .env file not found, relying on system environment variables")
 	}

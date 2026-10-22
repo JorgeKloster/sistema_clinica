@@ -1,4 +1,5 @@
 import 'package:controle_clinica/pages/common/base_page.dart';
+import 'package:controle_clinica/widgets/form_dialog.dart';
 import 'package:flutter/material.dart';
 
 class PatientsPage extends StatelessWidget {
@@ -20,7 +21,7 @@ class PatientsPage extends StatelessWidget {
             border: Border.all(color: Colors.grey.shade300),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),
@@ -82,7 +83,24 @@ class PatientsPage extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.pushNamed(context, '/add_patient'),
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder:
+                (_) => EntityFormDialog(
+                  title: "Adicionar Paciente",
+                  fields: [
+                    FormFieldConfig(name: "name", label: "Nome"),
+                    FormFieldConfig(name: "email", label: "Email"),
+                    FormFieldConfig(name: "phone", label: "Telefone"),
+                  ],
+                  onSubmit: (values) {
+                    // Save patient logic
+                    print(values);
+                  },
+                ),
+          );
+        },
         child: const Icon(Icons.add),
       ),
     );
