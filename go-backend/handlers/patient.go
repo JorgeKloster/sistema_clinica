@@ -5,10 +5,11 @@ import (
 	"go-backend/db"
 	"go-backend/models"
 	"net/http"
+	"strings"
 )
 
 func GetPatients(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.DB.Query(`SELECT patient_id, clinic_id, name, birth_date, email, phone, created_at, updated_at, updated_by FROM patient`)
+	rows, err := db.DB.Query(`SELECT patient_id, clinic_id, name, cpf, birth_date, email, phone, created_at, updated_at, updated_by FROM patient`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -37,12 +38,26 @@ func CreatePatient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := db.DB.Exec(`
-        INSERT INTO patient (clinic_id, name, birth_date, email, phone, created_at, updated_at, updated_by)
-        VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $6)
-    `, p.ClinicID, p.Name, p.BirthDate, p.Email, p.Phone, p.UpdatedBy)
+        INSERT INTO patient (clinic_id, name, cpf, birth_date, email, phone, created_at, updated_at, updated_by)
+        VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $7)
+    `, p.ClinicID, p.Name, p.CPF, p.BirthDate, p.Email, p.Phone, p.UpdatedBy)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if strings.Contains(err.Error(), "patient_cpf_unique") {
+			http.Error(
+				w,
+				"CPF já existente para outro paciente",
+				http.StatusConflict,
+			)
+			return
+		}
+
+		http.Error(
+			w,
+			err.Error(),
+			http.StatusInternalServerError,
+		)
+
 		return
 	}
 

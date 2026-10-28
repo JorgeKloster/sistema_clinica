@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class PatientService {
   static Future<void> createPatient(Map<String, dynamic> values) async {
-    final url = Uri.parse("http://localhost:8080/patients");
+    final url = Uri.parse("http://localhost:8080/patients/create");
     final authService = AuthService();
     final response = await http.post(
       url,
@@ -15,6 +15,7 @@ class PatientService {
       body: jsonEncode({
         "clinic_id": authService.clinicId,
         "name": values["name"],
+        "cpf": values["cpf"],
         "birth_date": values["birth_date"],
         "email": values["email"],
         "phone": values["phone"],
@@ -23,7 +24,7 @@ class PatientService {
     );
 
     if (response.statusCode != 201) {
-      throw Exception("Failed to create patient: ${response.body}");
+      throw Exception("Falha ao criar paciente: ${response.body}");
     }
   }
 }

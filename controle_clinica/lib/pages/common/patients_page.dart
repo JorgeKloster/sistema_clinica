@@ -1,4 +1,5 @@
 import 'package:controle_clinica/pages/common/base_page.dart';
+import 'package:controle_clinica/services/patient_service.dart';
 import 'package:controle_clinica/widgets/form_dialog.dart';
 import 'package:flutter/material.dart';
 
@@ -90,13 +91,52 @@ class PatientsPage extends StatelessWidget {
                 (_) => EntityFormDialog(
                   title: "Adicionar Paciente",
                   fields: [
-                    FormFieldConfig(name: "name", label: "Nome"),
-                    FormFieldConfig(name: "email", label: "Email"),
-                    FormFieldConfig(name: "phone", label: "Telefone"),
+                    FormFieldConfig(
+                      name: "name",
+                      label: "Nome",
+                      type: FieldType.text,
+                      required: true,
+                    ),
+                    FormFieldConfig(
+                      name: "cpf",
+                      label: "CPF",
+                      type: FieldType.CPF,
+                      required: true,
+                    ),
+                    FormFieldConfig(
+                      name: "birth_date",
+                      label: "Data de nascimento",
+                      type: FieldType.date,
+                      required: true,
+                    ),
+                    FormFieldConfig(
+                      name: "gender",
+                      label: "Sexo",
+                      type: FieldType.dropdown,
+                      required: true,
+                      options: ["Masculino", "Feminino"],
+                    ),
+                    FormFieldConfig(
+                      name: "phone",
+                      label: "Telefone",
+                      type: FieldType.phone,
+                    ),
+                    FormFieldConfig(
+                      name: "email",
+                      label: "Email",
+                      type: FieldType.email,
+                    ),
                   ],
-                  onSubmit: (values) {
-                    // Save patient logic
-                    print(values);
+                  onSubmit: (values) async {
+                    await PatientService.createPatient(values);
+
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Paciente cadastrado com sucesso"),
+                        ),
+                      );
+                    }
                   },
                 ),
           );

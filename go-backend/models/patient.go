@@ -6,6 +6,7 @@ type Patient struct {
 	PatientID int       `json:"patient_id"`
 	ClinicID  int       `json:"clinic_id"`
 	Name      string    `json:"name"`
+	CPF       string    `json:"cpf"`
 	BirthDate time.Time `json:"birth_date"`
 	Email     string    `json:"email"`
 	Phone     string    `json:"phone"`
