@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 enum FieldType { text, email, phone, date, dropdown, CPF }
 
@@ -144,7 +145,7 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
             if (date != null) {
               controller.text = "${date.day}/${date.month}/${date.year}";
 
-              _values[field.name] = date.toIso8601String();
+              _values[field.name] = DateFormat('yyyy-MM-dd').format(date);
             }
           },
         );

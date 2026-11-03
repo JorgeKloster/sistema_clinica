@@ -3,16 +3,17 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"go-backend/db"
+	"go-backend/middleware"
 	"go-backend/models"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
-
-var jwtKey = []byte("your_secret_key") // keep safe, use env var
 
 type Claims struct {
 	UserID   int    `json:"user_id"`
@@ -57,6 +58,8 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("JWT_SECRET:", os.Getenv("JWT_SECRET"))
+
 	var storedHash string
 	var user models.Users
 	err := db.DB.QueryRow(`SELECT user_id, clinic_id, first_name, last_name, email, phone, role, specialty, password_hash, created_at, updated_at, updated_by FROM users WHERE email = $1`, creds.Email).Scan(&user.UserID, &user.ClinicID, &user.FirstName, &user.LastName, &user.Email, &user.Phone, &user.Role, &user.Specialty, &storedHash, &user.CreatedAt, &user.UpdatedAt, &user.UpdatedBy)
@@ -74,18 +77,21 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create JWT claims
-	expirationTime := time.Now().Add(24 * time.Hour)
-	claims := &Claims{
+	claims := &middleware.Claims{
 		UserID:   user.UserID,
 		ClinicID: user.ClinicID,
 		Role:     user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			ExpiresAt: jwt.NewNumericDate(
+				time.Now().Add(
+					24 * time.Hour,
+				),
+			),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString(middleware.JwtKey)
 	if err != nil {
 		http.Error(w, "Could not create token", http.StatusInternalServerError)
 		return
@@ -97,6 +103,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		"token": tokenString,
 		"user":  user,
 	})
+
 }
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {

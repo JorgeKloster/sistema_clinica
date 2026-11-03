@@ -3,8 +3,15 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
+  static final AuthService _instance = AuthService._internal();
+
+  factory AuthService() {
+    return _instance;
+  }
+
+  AuthService._internal();
   Map<String, dynamic>? currentUser;
-  final _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
   String? token;
 
   Future<bool> login(String email, String password) async {
@@ -21,6 +28,8 @@ class AuthService {
       currentUser = data["user"];
 
       await saveToken(token!);
+
+      print(AuthService().token);
       return true;
     }
     return false;
@@ -40,6 +49,11 @@ class AuthService {
     await _storage.delete(key: "jwt_token");
   }
 
-  int get clinicId => currentUser?["clinic_id"];
-  int get userId => currentUser?["user_id"];
+  Future<void> initialize() async {
+    await loadToken();
+  }
+
+  int? get clinicId => currentUser?["clinic_id"];
+
+  int? get userId => currentUser?["user_id"];
 }

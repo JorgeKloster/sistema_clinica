@@ -2,28 +2,117 @@ package routes
 
 import (
 	"go-backend/handlers"
+	"go-backend/middleware"
 	"net/http"
 )
 
 func RegisterRoutes() {
+
+	// PUBLIC
+	http.HandleFunc(
+		"/users/register",
+		handlers.RegisterUser,
+	)
+
+	http.HandleFunc(
+		"/users/login",
+		handlers.LoginUser,
+	)
+
+	// PROTECTED
+
 	// Clinics
-	http.HandleFunc("/clinics", handlers.GetClinics)
-	http.HandleFunc("/clinics/create", handlers.CreateClinic)
+	http.Handle(
+		"/clinics",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.GetClinics,
+			),
+		),
+	)
+
+	http.Handle(
+		"/clinics/create",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.CreateClinic,
+			),
+		),
+	)
 
 	// Users
-	http.HandleFunc("/users", handlers.GetUsers)
-	http.HandleFunc("/users/register", handlers.RegisterUser)
-	http.HandleFunc("/users/login", handlers.LoginUser)
+	http.Handle(
+		"/users",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.GetUsers,
+			),
+		),
+	)
 
 	// Patients
-	http.HandleFunc("/patients", handlers.GetPatients)
-	http.HandleFunc("/patients/create", handlers.CreatePatient)
+	http.Handle(
+		"/patients",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.GetPatients,
+			),
+		),
+	)
+
+	http.Handle(
+		"/patients/create",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.CreatePatient,
+			),
+		),
+	)
+
+	http.Handle(
+		"/patients/delete",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.DeletePatient,
+			),
+		),
+	)
 
 	// Procedures
-	http.HandleFunc("/procedures", handlers.GetProcedures)
-	http.HandleFunc("/procedures/create", handlers.CreateProcedure)
+	http.Handle(
+		"/procedures",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.GetProcedures,
+			),
+		),
+	)
+
+	http.Handle(
+		"/procedures/create",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.CreateProcedure,
+			),
+		),
+	)
 
 	// Appointments
-	http.HandleFunc("/appointments", handlers.GetAppointments)
-	http.HandleFunc("/appointments/create", handlers.CreateAppointment)
+	http.Handle(
+		"/appointments",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.GetAppointments,
+			),
+		),
+	)
+
+	http.Handle(
+		"/appointments/create",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.CreateAppointment,
+			),
+		),
+	)
 }

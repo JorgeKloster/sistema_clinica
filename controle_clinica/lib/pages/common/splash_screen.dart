@@ -12,12 +12,14 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuth();
+    _initialize();
   }
 
-  Future<void> _checkAuth() async {
+  Future<void> _initialize() async {
     final authService = AuthService();
+
     await authService.loadToken();
+
     if (!mounted) return;
 
     if (authService.token != null) {
