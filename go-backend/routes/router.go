@@ -78,6 +78,15 @@ func RegisterRoutes() {
 		),
 	)
 
+	http.Handle(
+		"/patients/update",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.UpdatePatient,
+			),
+		),
+	)
+
 	// Procedures
 	http.Handle(
 		"/procedures",

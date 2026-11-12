@@ -162,3 +162,59 @@ func DeletePatient(
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func UpdatePatient(w http.ResponseWriter, r *http.Request) {
+
+	claims := middleware.GetClaims(r)
+
+	patientID := r.URL.Query().Get("id")
+
+	var p models.Patient
+
+	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+		http.Error(
+			w,
+			err.Error(),
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	_, err := db.DB.Exec(`
+        UPDATE patient
+        SET
+            first_name = $1,
+            last_name = $2,
+            cpf = $3,
+            birth_date = $4,
+            gender = $5,
+            email = $6,
+            phone = $7,
+            updated_at = CURRENT_TIMESTAMP,
+            updated_by = $8
+        WHERE patient_id = $9
+        AND clinic_id = $10
+    `,
+		p.FirstName,
+		p.LastName,
+		p.CPF,
+		p.BirthDate,
+		p.Gender,
+		p.Email,
+		p.Phone,
+		claims.UserID,
+		patientID,
+		claims.ClinicID,
+	)
+
+	if err != nil {
+		http.Error(
+			w,
+			err.Error(),
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

@@ -57,4 +57,24 @@ class PatientService {
       throw Exception("Erro ao excluir paciente");
     }
   }
+
+  static Future<void> updatePatient(
+    int patientId,
+    Map<String, dynamic> values,
+  ) async {
+    final authService = AuthService();
+
+    final response = await http.put(
+      Uri.parse("http://localhost:8080/patients/update?id=$patientId"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer ${authService.token}",
+      },
+      body: jsonEncode(values),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Erro ao atualizar paciente");
+    }
+  }
 }

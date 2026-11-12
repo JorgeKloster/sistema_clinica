@@ -9,6 +9,7 @@ class FormFieldConfig {
   final FieldType type;
   final bool required;
   final List<String>? options;
+  final dynamic initialValue;
 
   const FormFieldConfig({
     required this.name,
@@ -16,6 +17,7 @@ class FormFieldConfig {
     required this.type,
     this.required = false,
     this.options,
+    this.initialValue,
   });
 }
 
@@ -39,6 +41,17 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
   final _formKey = GlobalKey<FormState>();
 
   final Map<String, dynamic> _values = {};
+
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    for (final field in widget.fields) {
+      _values[field.name] = field.initialValue;
+    }
+  }
 
   InputDecoration _decoration(String label) {
     return InputDecoration(
@@ -102,14 +115,22 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
   Widget _buildField(FormFieldConfig field) {
     switch (field.type) {
       case FieldType.text:
+        final controller = TextEditingController(
+          text: field.initialValue?.toString() ?? "",
+        );
         return TextFormField(
+          controller: controller,
           decoration: _decoration(field.label),
           validator: (value) => _validate(field, value),
           onSaved: (value) => _values[field.name] = value,
         );
 
       case FieldType.email:
+        final controller = TextEditingController(
+          text: field.initialValue?.toString() ?? "",
+        );
         return TextFormField(
+          controller: controller,
           keyboardType: TextInputType.emailAddress,
           decoration: _decoration(field.label),
           validator: (value) => _validate(field, value),
@@ -117,7 +138,11 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
         );
 
       case FieldType.phone:
+        final controller = TextEditingController(
+          text: field.initialValue?.toString() ?? "",
+        );
         return TextFormField(
+          controller: controller,
           keyboardType: TextInputType.phone,
           decoration: _decoration(field.label),
           validator: (value) => _validate(field, value),
@@ -125,7 +150,9 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
         );
 
       case FieldType.date:
-        final controller = TextEditingController();
+        final controller = TextEditingController(
+          text: field.initialValue?.toString() ?? "",
+        );
 
         return TextFormField(
           controller: controller,
@@ -152,6 +179,7 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
 
       case FieldType.dropdown:
         return DropdownButtonFormField<String>(
+          initialValue: field.initialValue?.toString(),
           decoration: _decoration(field.label),
           items:
               field.options!
@@ -172,12 +200,48 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
           },
         );
       case FieldType.CPF:
+        final controller = TextEditingController(
+          text: field.initialValue?.toString() ?? "",
+        );
         return TextFormField(
+          controller: controller,
           keyboardType: TextInputType.number,
           decoration: _decoration(field.label),
           validator: (value) => _validate(field, value),
           onSaved: (value) => _values[field.name] = value,
         );
+    }
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    _formKey.currentState!.save();
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      await widget.onSubmit(_values);
+
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _isSaving = false;
+      });
     }
   }
 
@@ -212,26 +276,15 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
           child: const Text("Cancelar"),
         ),
         ElevatedButton(
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
-
-              try {
-                await widget.onSubmit(_values);
-
-                if (mounted) {
-                  Navigator.pop(context);
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(e.toString())));
-                }
-              }
-            }
-          },
-          child: const Text("Salvar"),
+          onPressed: _isSaving ? null : _save,
+          child:
+              _isSaving
+                  ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                  : const Text("Salvar"),
         ),
       ],
     );

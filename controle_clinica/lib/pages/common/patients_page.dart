@@ -86,77 +86,158 @@ class _PatientsPageState extends State<PatientsPage> {
     });
   }
 
+  Future<void> _showEditDialog(Map<String, dynamic> patient) async {
+    await showDialog(
+      context: context,
+      builder:
+          (_) => EntityFormDialog(
+            title: "Editar Paciente",
+            fields: [
+              FormFieldConfig(
+                name: "first_name",
+                label: "Nome",
+                type: FieldType.text,
+                required: true,
+                initialValue: patient["first_name"],
+              ),
+
+              FormFieldConfig(
+                name: "last_name",
+                label: "Sobrenome",
+                type: FieldType.text,
+                required: true,
+                initialValue: patient["last_name"],
+              ),
+
+              FormFieldConfig(
+                name: "cpf",
+                label: "CPF",
+                type: FieldType.CPF,
+                required: true,
+                initialValue: patient["cpf"],
+              ),
+
+              FormFieldConfig(
+                name: "birth_date",
+                label: "Data de nascimento",
+                type: FieldType.date,
+                required: true,
+                initialValue: patient["birth_date"]?.toString().split("T")[0],
+              ),
+
+              FormFieldConfig(
+                name: "gender",
+                label: "Sexo",
+                type: FieldType.dropdown,
+                required: true,
+                options: ["Masculino", "Feminino"],
+                initialValue: patient["gender"],
+              ),
+
+              FormFieldConfig(
+                name: "phone",
+                label: "Telefone",
+                type: FieldType.phone,
+                initialValue: patient["phone"],
+              ),
+
+              FormFieldConfig(
+                name: "email",
+                label: "Email",
+                type: FieldType.email,
+                initialValue: patient["email"],
+              ),
+            ],
+            onSubmit: (values) async {
+              await PatientService.updatePatient(patient["patient_id"], values);
+
+              await _loadPatients();
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Paciente atualizado com sucesso"),
+                  ),
+                );
+              }
+            },
+          ),
+    );
+  }
+
+  Future<void> _showCreateDialog() async {
+    await showDialog(
+      context: context,
+      builder:
+          (_) => EntityFormDialog(
+            title: "Adicionar Paciente",
+            fields: [
+              FormFieldConfig(
+                name: "first_name",
+                label: "Nome",
+                type: FieldType.text,
+                required: true,
+              ),
+              FormFieldConfig(
+                name: "last_name",
+                label: "Sobrenome",
+                type: FieldType.text,
+                required: true,
+              ),
+              FormFieldConfig(
+                name: "cpf",
+                label: "CPF",
+                type: FieldType.CPF,
+                required: true,
+              ),
+              FormFieldConfig(
+                name: "birth_date",
+                label: "Data de nascimento",
+                type: FieldType.date,
+                required: true,
+              ),
+              FormFieldConfig(
+                name: "gender",
+                label: "Sexo",
+                type: FieldType.dropdown,
+                required: true,
+                options: ["Masculino", "Feminino"],
+              ),
+              FormFieldConfig(
+                name: "phone",
+                label: "Telefone",
+                type: FieldType.phone,
+              ),
+              FormFieldConfig(
+                name: "email",
+                label: "Email",
+                type: FieldType.email,
+              ),
+            ],
+            onSubmit: (values) async {
+              await PatientService.createPatient(values);
+
+              await _loadPatients();
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Paciente cadastrado com sucesso"),
+                  ),
+                );
+              }
+            },
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BasePage(
       title: "Pacientes",
       userRole: "dentist",
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder:
-                (_) => EntityFormDialog(
-                  title: "Adicionar Paciente",
-                  fields: [
-                    FormFieldConfig(
-                      name: "first_name",
-                      label: "Nome",
-                      type: FieldType.text,
-                      required: true,
-                    ),
-                    FormFieldConfig(
-                      name: "last_name",
-                      label: "Sobrenome",
-                      type: FieldType.text,
-                      required: true,
-                    ),
-                    FormFieldConfig(
-                      name: "cpf",
-                      label: "CPF",
-                      type: FieldType.CPF,
-                      required: true,
-                    ),
-                    FormFieldConfig(
-                      name: "birth_date",
-                      label: "Data de nascimento",
-                      type: FieldType.date,
-                      required: true,
-                    ),
-                    FormFieldConfig(
-                      name: "gender",
-                      label: "Sexo",
-                      type: FieldType.dropdown,
-                      required: true,
-                      options: ["Masculino", "Feminino"],
-                    ),
-                    FormFieldConfig(
-                      name: "phone",
-                      label: "Telefone",
-                      type: FieldType.phone,
-                    ),
-                    FormFieldConfig(
-                      name: "email",
-                      label: "Email",
-                      type: FieldType.email,
-                    ),
-                  ],
-                  onSubmit: (values) async {
-                    await PatientService.createPatient(values);
-
-                    await _loadPatients();
-
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Paciente cadastrado com sucesso"),
-                        ),
-                      );
-                    }
-                  },
-                ),
-          );
-        },
+        onPressed: _showCreateDialog,
         child: const Icon(Icons.add),
       ),
       body: Padding(
@@ -238,6 +319,7 @@ class _PatientsPageState extends State<PatientsPage> {
                                         break;
 
                                       case 'Editar':
+                                        await _showEditDialog(patient);
                                         break;
 
                                       case 'Excluir':
@@ -246,7 +328,9 @@ class _PatientsPageState extends State<PatientsPage> {
                                               context,
                                               title: "Excluir paciente",
                                               message:
-                                                  "Deseja realmente excluir este paciente?",
+                                                  "Deseja realmente excluir o paciente "
+                                                  "${patient["first_name"]} "
+                                                  "${patient["last_name"]}?",
                                             );
                                         if (confirm == true) {
                                           await PatientService.deletePatient(
@@ -254,6 +338,18 @@ class _PatientsPageState extends State<PatientsPage> {
                                           );
 
                                           await _loadPatients();
+
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  "Paciente excluído com sucesso",
+                                                ),
+                                              ),
+                                            );
+                                          }
                                         }
 
                                         break;
