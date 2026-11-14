@@ -50,6 +50,61 @@ func RegisterRoutes() {
 		),
 	)
 
+	http.Handle(
+		"/users/create",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.CreateUser,
+			),
+		),
+	)
+
+	http.Handle(
+		"/users/update",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.UpdateUser,
+			),
+		),
+	)
+
+	http.Handle(
+		"/users/delete",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.DeleteUser,
+			),
+		),
+	)
+
+	// Specialties
+	http.Handle(
+		"/specialties",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.GetSpecialties,
+			),
+		),
+	)
+
+	http.Handle(
+		"/specialties/create",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.CreateSpecialty,
+			),
+		),
+	)
+
+	http.Handle(
+		"/specialties/delete",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.DeleteSpecialty,
+			),
+		),
+	)
+
 	// Patients
 	http.Handle(
 		"/patients",
@@ -102,6 +157,24 @@ func RegisterRoutes() {
 		middleware.JWTMiddleware(
 			http.HandlerFunc(
 				handlers.CreateProcedure,
+			),
+		),
+	)
+
+	http.Handle(
+		"/procedures/update",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.UpdateProcedure,
+			),
+		),
+	)
+
+	http.Handle(
+		"/procedures/delete",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.DeleteProcedure,
 			),
 		),
 	)

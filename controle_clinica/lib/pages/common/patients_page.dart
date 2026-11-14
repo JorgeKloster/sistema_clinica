@@ -333,9 +333,22 @@ class _PatientsPageState extends State<PatientsPage> {
                                                   "${patient["last_name"]}?",
                                             );
                                         if (confirm == true) {
-                                          await PatientService.deletePatient(
-                                            patient["patient_id"],
-                                          );
+                                          try {
+                                            await PatientService.deletePatient(
+                                              patient["patient_id"],
+                                            );
+                                          } catch (e) {
+                                            if (mounted) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(e.toString()),
+                                                ),
+                                              );
+                                            }
+                                            break;
+                                          }
 
                                           await _loadPatients();
 

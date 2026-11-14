@@ -1,6 +1,12 @@
 import 'dart:convert';
+import 'package:controle_clinica/services/api_exception.dart';
 import 'package:controle_clinica/services/auth_service.dart';
 import 'package:http/http.dart' as http;
+
+ApiException _apiError(String fallback, http.Response response) {
+  final body = response.body.trim();
+  return ApiException(body.isNotEmpty ? body : fallback);
+}
 
 class PatientService {
   static Future<void> createPatient(Map<String, dynamic> values) async {
@@ -24,7 +30,7 @@ class PatientService {
     );
 
     if (response.statusCode != 201) {
-      throw Exception("Falha ao criar paciente: ${response.body}");
+      throw _apiError("Falha ao criar paciente", response);
     }
   }
 
@@ -54,7 +60,7 @@ class PatientService {
     );
 
     if (response.statusCode != 204) {
-      throw Exception("Erro ao excluir paciente");
+      throw _apiError("Erro ao excluir paciente", response);
     }
   }
 
@@ -74,7 +80,7 @@ class PatientService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception("Erro ao atualizar paciente");
+      throw _apiError("Erro ao atualizar paciente", response);
     }
   }
 }

@@ -2,16 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"go-backend/db"
 	"go-backend/middleware"
 	"go-backend/models"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
-
-	"github.com/lib/pq"
 )
 
 func GetPatients(w http.ResponseWriter, r *http.Request) {
@@ -116,50 +111,46 @@ func CreatePatient(w http.ResponseWriter, r *http.Request) {
     `, p.ClinicID, p.FirstName, p.LastName, p.CPF, p.BirthDate, p.Email, p.Phone, p.Gender, p.UpdatedBy)
 
 	if err != nil {
-		if strings.Contains(err.Error(), "patient_cpf_unique") {
-			http.Error(
-				w,
-				"CPF já existente para outro paciente",
-				http.StatusConflict,
-			)
+		if pqErr, ok := pgError(err); ok && pqErr.Code == pgUniqueViolation &&
+			pqErr.Constraint == "patient_cpf_unique" {
+			http.Error(w, "CPF já existente para outro paciente", http.StatusConflict)
 			return
 		}
 
-		http.Error(
-			w,
-			err.Error(),
-			http.StatusInternalServerError,
-		)
-
+		log.Printf("CreatePatient: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
 }
 
-func DeletePatient(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
+func DeletePatient(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 
-	patientID := r.URL.Query().Get("id")
+	patientID, ok := queryID(w, r)
+	if !ok {
+		return
+	}
 
-	_, err := db.DB.Exec(`
+	result, err := db.DB.Exec(`
         DELETE FROM patient
         WHERE patient_id = $1
         AND clinic_id = $2
-    `,
-		patientID,
-		claims.ClinicID,
-	)
-
+    `, patientID, claims.ClinicID)
 	if err != nil {
-		http.Error(
-			w,
-			err.Error(),
-			http.StatusInternalServerError,
-		)
+		// Com a migration 0010 a FK de appointment é RESTRICT.
+		if pqErr, ok := pgError(err); ok && pqErr.Code == pgForeignKeyViolation {
+			http.Error(w, "Paciente possui agendamentos e não pode ser excluído", http.StatusConflict)
+			return
+		}
+		log.Printf("DeletePatient: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if n, _ := result.RowsAffected(); n == 0 {
+		http.Error(w, "Paciente não encontrado", http.StatusNotFound)
 		return
 	}
 
@@ -170,9 +161,8 @@ func UpdatePatient(w http.ResponseWriter, r *http.Request) {
 
 	claims := middleware.GetClaims(r)
 
-	patientID, err := strconv.Atoi(r.URL.Query().Get("id"))
-	if err != nil || patientID <= 0 {
-		http.Error(w, "Invalid patient id", http.StatusBadRequest)
+	patientID, ok := queryID(w, r)
+	if !ok {
 		return
 	}
 
@@ -211,8 +201,7 @@ func UpdatePatient(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		var pqErr *pq.Error
-		if errors.As(err, &pqErr) && pqErr.Code == "23505" &&
+		if pqErr, ok := pgError(err); ok && pqErr.Code == pgUniqueViolation &&
 			pqErr.Constraint == "patient_cpf_unique" {
 			http.Error(w, "CPF já existente para outro paciente", http.StatusConflict)
 			return

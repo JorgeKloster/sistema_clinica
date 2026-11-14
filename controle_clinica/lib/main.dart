@@ -1,3 +1,5 @@
+import 'package:controle_clinica/pages/admin/procedures_page.dart';
+import 'package:controle_clinica/pages/admin/professionals_page.dart';
 import 'package:controle_clinica/pages/common/patients_page.dart';
 import 'package:controle_clinica/pages/common/schedule_page.dart';
 import 'package:controle_clinica/pages/common/splash_screen.dart';
@@ -22,6 +24,8 @@ class MyApp extends StatelessWidget {
         '/dentist_home': (context) => DentistHomePage(),
         '/schedule': (context) => SchedulePage(),
         '/patients': (context) => PatientsPage(),
+        '/admin_professionals': (context) => ProfessionalsPage(),
+        '/admin_procedures': (context) => ProceduresPage(),
       },
     );
   }

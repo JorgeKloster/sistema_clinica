@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-enum FieldType { text, email, phone, date, dropdown, CPF }
+enum FieldType { text, email, phone, date, dropdown, CPF, money, password }
 
 class FormFieldConfig {
   final String name;
@@ -9,6 +9,10 @@ class FormFieldConfig {
   final FieldType type;
   final bool required;
   final List<String>? options;
+
+  /// Texto exibido para cada opção do dropdown (valor -> rótulo).
+  /// Se omitido, o próprio valor é exibido.
+  final Map<String, String>? optionLabels;
   final dynamic initialValue;
 
   const FormFieldConfig({
@@ -17,6 +21,7 @@ class FormFieldConfig {
     required this.type,
     this.required = false,
     this.options,
+    this.optionLabels,
     this.initialValue,
   });
 }
@@ -42,6 +47,10 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
 
   final Map<String, dynamic> _values = {};
 
+  // Criados uma única vez: se fossem recriados no build, o texto digitado
+  // seria apagado a cada rebuild (por exemplo, após um erro ao salvar).
+  final Map<String, TextEditingController> _controllers = {};
+
   bool _isSaving = false;
 
   @override
@@ -50,7 +59,21 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
 
     for (final field in widget.fields) {
       _values[field.name] = field.initialValue;
+
+      if (field.type != FieldType.dropdown) {
+        _controllers[field.name] = TextEditingController(
+          text: field.initialValue?.toString() ?? "",
+        );
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   InputDecoration _decoration(String label) {
@@ -105,6 +128,20 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
         }
         break;
 
+      case FieldType.money:
+        final amount = double.tryParse(value.replaceAll(',', '.'));
+
+        if (amount == null || amount < 0) {
+          return "Valor inválido";
+        }
+        break;
+
+      case FieldType.password:
+        if (value.length < 8) {
+          return "A senha deve ter pelo menos 8 caracteres";
+        }
+        break;
+
       default:
         break;
     }
@@ -112,47 +149,32 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
     return null;
   }
 
+  TextInputType _keyboardFor(FieldType type) {
+    switch (type) {
+      case FieldType.email:
+        return TextInputType.emailAddress;
+      case FieldType.phone:
+        return TextInputType.phone;
+      case FieldType.CPF:
+        return TextInputType.number;
+      case FieldType.money:
+        return const TextInputType.numberWithOptions(decimal: true);
+      default:
+        return TextInputType.text;
+    }
+  }
+
+  dynamic _parseValue(FormFieldConfig field, String? value) {
+    if (field.type == FieldType.money) {
+      return double.tryParse((value ?? "").replaceAll(',', '.')) ?? 0;
+    }
+    return value;
+  }
+
   Widget _buildField(FormFieldConfig field) {
     switch (field.type) {
-      case FieldType.text:
-        final controller = TextEditingController(
-          text: field.initialValue?.toString() ?? "",
-        );
-        return TextFormField(
-          controller: controller,
-          decoration: _decoration(field.label),
-          validator: (value) => _validate(field, value),
-          onSaved: (value) => _values[field.name] = value,
-        );
-
-      case FieldType.email:
-        final controller = TextEditingController(
-          text: field.initialValue?.toString() ?? "",
-        );
-        return TextFormField(
-          controller: controller,
-          keyboardType: TextInputType.emailAddress,
-          decoration: _decoration(field.label),
-          validator: (value) => _validate(field, value),
-          onSaved: (value) => _values[field.name] = value,
-        );
-
-      case FieldType.phone:
-        final controller = TextEditingController(
-          text: field.initialValue?.toString() ?? "",
-        );
-        return TextFormField(
-          controller: controller,
-          keyboardType: TextInputType.phone,
-          decoration: _decoration(field.label),
-          validator: (value) => _validate(field, value),
-          onSaved: (value) => _values[field.name] = value,
-        );
-
       case FieldType.date:
-        final controller = TextEditingController(
-          text: field.initialValue?.toString() ?? "",
-        );
+        final controller = _controllers[field.name]!;
 
         return TextFormField(
           controller: controller,
@@ -184,8 +206,10 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
           items:
               field.options!
                   .map(
-                    (option) =>
-                        DropdownMenuItem(value: option, child: Text(option)),
+                    (option) => DropdownMenuItem(
+                      value: option,
+                      child: Text(field.optionLabels?[option] ?? option),
+                    ),
                   )
                   .toList(),
           validator: (value) {
@@ -199,16 +223,22 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
             _values[field.name] = value;
           },
         );
+
+      case FieldType.text:
+      case FieldType.email:
+      case FieldType.phone:
       case FieldType.CPF:
-        final controller = TextEditingController(
-          text: field.initialValue?.toString() ?? "",
-        );
+      case FieldType.money:
+      case FieldType.password:
         return TextFormField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: _decoration(field.label),
+          controller: _controllers[field.name],
+          keyboardType: _keyboardFor(field.type),
+          obscureText: field.type == FieldType.password,
+          decoration: _decoration(field.label).copyWith(
+            prefixText: field.type == FieldType.money ? 'R\$ ' : null,
+          ),
           validator: (value) => _validate(field, value),
-          onSaved: (value) => _values[field.name] = value,
+          onSaved: (value) => _values[field.name] = _parseValue(field, value),
         );
     }
   }
