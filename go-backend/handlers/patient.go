@@ -2,12 +2,16 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"go-backend/db"
 	"go-backend/middleware"
 	"go-backend/models"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
+
+	"github.com/lib/pq"
 )
 
 func GetPatients(w http.ResponseWriter, r *http.Request) {
@@ -20,8 +24,7 @@ func GetPatients(w http.ResponseWriter, r *http.Request) {
 	)
 
 	rows, err := db.DB.Query(`
-        SELECT
-            patient_id,
+        SELECT patient_id,
             clinic_id,
             first_name,
             last_name,
@@ -167,20 +170,20 @@ func UpdatePatient(w http.ResponseWriter, r *http.Request) {
 
 	claims := middleware.GetClaims(r)
 
-	patientID := r.URL.Query().Get("id")
+	patientID, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil || patientID <= 0 {
+		http.Error(w, "Invalid patient id", http.StatusBadRequest)
+		return
+	}
 
 	var p models.Patient
 
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-		http.Error(
-			w,
-			err.Error(),
-			http.StatusBadRequest,
-		)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	_, err := db.DB.Exec(`
+	result, err := db.DB.Exec(`
         UPDATE patient
         SET
             first_name = $1,
@@ -208,11 +211,26 @@ func UpdatePatient(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		http.Error(
-			w,
-			err.Error(),
-			http.StatusInternalServerError,
-		)
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" &&
+			pqErr.Constraint == "patient_cpf_unique" {
+			http.Error(w, "CPF já existente para outro paciente", http.StatusConflict)
+			return
+		}
+
+		log.Printf("UpdatePatient: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		log.Printf("UpdatePatient rows affected: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	if rows == 0 {
+		http.Error(w, "Patient not found", http.StatusNotFound)
 		return
 	}
 
