@@ -1,5 +1,6 @@
 import 'package:controle_clinica/pages/common/base_page.dart';
 import 'package:controle_clinica/services/room_service.dart';
+import 'package:controle_clinica/theme/app_theme.dart';
 import 'package:controle_clinica/widgets/confirmation_dialog.dart';
 import 'package:controle_clinica/widgets/form_dialog.dart';
 import 'package:controle_clinica/widgets/room_types_dialog.dart';
@@ -319,7 +320,7 @@ class _RoomsPageState extends State<RoomsPage> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: AppColors.line),
           ),
           child: Column(
             children: [

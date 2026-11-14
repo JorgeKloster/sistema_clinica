@@ -151,22 +151,9 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
     super.dispose();
   }
 
+  // Aparência (fundo, bordas, foco) vem do tema do app.
   InputDecoration _decoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      filled: true,
-      fillColor: Colors.grey.shade50,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.blue),
-      ),
-    );
+    return InputDecoration(labelText: label);
   }
 
   String? _validate(FormFieldConfig field, String? value) {

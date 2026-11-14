@@ -9,6 +9,7 @@ import 'package:controle_clinica/pages/common/schedule_page.dart';
 import 'package:controle_clinica/pages/common/splash_screen.dart';
 import 'package:controle_clinica/pages/dentist/dentist_homepage.dart';
 import 'package:controle_clinica/pages/login/login_page.dart';
+import 'package:controle_clinica/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -21,6 +22,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      title: 'Bucalle',
+      theme: AppTheme.light(),
       initialRoute: '/splash',
       routes: {
         '/splash': (context) => const SplashScreen(),

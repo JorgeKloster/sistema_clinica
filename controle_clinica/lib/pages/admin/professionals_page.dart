@@ -2,6 +2,7 @@ import 'package:controle_clinica/pages/common/base_page.dart';
 import 'package:controle_clinica/services/auth_service.dart';
 import 'package:controle_clinica/services/professional_service.dart';
 import 'package:controle_clinica/services/specialty_service.dart';
+import 'package:controle_clinica/theme/app_theme.dart';
 import 'package:controle_clinica/widgets/confirmation_dialog.dart';
 import 'package:controle_clinica/widgets/form_dialog.dart';
 import 'package:controle_clinica/widgets/specialties_dialog.dart';
@@ -271,10 +272,10 @@ class _ProfessionalsPageState extends State<ProfessionalsPage> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: AppColors.line),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),

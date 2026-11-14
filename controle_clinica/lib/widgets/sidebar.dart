@@ -1,3 +1,4 @@
+import 'package:controle_clinica/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class Sidebar extends StatelessWidget {
@@ -5,41 +6,47 @@ class Sidebar extends StatelessWidget {
 
   const Sidebar({super.key, required this.userRole});
 
+  bool _isCurrent(BuildContext context, String route) =>
+      ModalRoute.of(context)?.settings.name == route;
+
+  /// Fecha o menu e vai para a tela (sem empilhar a que já está aberta).
+  void _go(BuildContext context, String route) {
+    final navigator = Navigator.of(context);
+    final current = ModalRoute.of(context)?.settings.name;
+
+    navigator.pop(); // fecha o drawer
+
+    if (current != route) navigator.pushNamed(route);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: ListView(
         children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(
-              color: Color(0xFF41372E), // optional background color
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Clinic logo
-                Image.asset(
-                  'assets/images/bucalle.jpg', // path to your logo in assets
-                  height: 120,
-                ),
-                const SizedBox(height: 10),
-              ],
+          Container(
+            color: AppColors.ink,
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Center(
+              // O fundo do logotipo é o mesmo marrom do cabeçalho.
+              child: Image.asset('assets/images/bucalle.jpg', height: 120),
             ),
           ),
+          const SizedBox(height: 8),
 
           // ---------------- Administrator ----------------
           if (userRole == "administrator") ...[
             ListTile(
               leading: const Icon(Icons.access_time),
               title: const Text("Atendimentos em andamento"),
-              onTap:
-                  () =>
-                      Navigator.pushNamed(context, '/admin_live_consultations'),
+              selected: _isCurrent(context, '/admin_live_consultations'),
+              onTap: () => _go(context, '/admin_live_consultations'),
             ),
             ListTile(
               leading: const Icon(Icons.calendar_today),
               title: const Text("Agenda"),
-              onTap: () => Navigator.pushNamed(context, '/schedule'),
+              selected: _isCurrent(context, '/schedule'),
+              onTap: () => _go(context, '/schedule'),
             ),
             ExpansionTile(
               leading: const Icon(Icons.settings),
@@ -47,22 +54,23 @@ class Sidebar extends StatelessWidget {
               children: [
                 ListTile(
                   title: const Text("Pacientes"),
-                  onTap: () => Navigator.pushNamed(context, '/patients'),
+                  selected: _isCurrent(context, '/patients'),
+              onTap: () => _go(context, '/patients'),
                 ),
                 ListTile(
                   title: const Text("Profissionais"),
-                  onTap:
-                      () =>
-                          Navigator.pushNamed(context, '/admin_professionals'),
+                  selected: _isCurrent(context, '/admin_professionals'),
+              onTap: () => _go(context, '/admin_professionals'),
                 ),
                 ListTile(
                   title: const Text("Procedimentos"),
-                  onTap:
-                      () => Navigator.pushNamed(context, '/admin_procedures'),
+                  selected: _isCurrent(context, '/admin_procedures'),
+              onTap: () => _go(context, '/admin_procedures'),
                 ),
                 ListTile(
                   title: const Text("Salas e Recursos"),
-                  onTap: () => Navigator.pushNamed(context, '/admin_resources'),
+                  selected: _isCurrent(context, '/admin_resources'),
+              onTap: () => _go(context, '/admin_resources'),
                 ),
               ],
             ),
@@ -72,27 +80,18 @@ class Sidebar extends StatelessWidget {
               children: [
                 ListTile(
                   title: const Text("Financeiro"),
-                  onTap:
-                      () => Navigator.pushNamed(
-                        context,
-                        '/admin_reports_financial',
-                      ),
+                  selected: _isCurrent(context, '/admin_reports_financial'),
+              onTap: () => _go(context, '/admin_reports_financial'),
                 ),
                 ListTile(
                   title: const Text("Atendimentos"),
-                  onTap:
-                      () => Navigator.pushNamed(
-                        context,
-                        '/admin_reports_appointments',
-                      ),
+                  selected: _isCurrent(context, '/admin_reports_appointments'),
+              onTap: () => _go(context, '/admin_reports_appointments'),
                 ),
                 ListTile(
                   title: const Text("Estatísticas de Pacientes"),
-                  onTap:
-                      () => Navigator.pushNamed(
-                        context,
-                        '/admin_reports_patients',
-                      ),
+                  selected: _isCurrent(context, '/admin_reports_patients'),
+              onTap: () => _go(context, '/admin_reports_patients'),
                 ),
               ],
             ),
@@ -102,18 +101,18 @@ class Sidebar extends StatelessWidget {
               children: [
                 ListTile(
                   title: const Text("Controle de Acesso"),
-                  onTap:
-                      () =>
-                          Navigator.pushNamed(context, '/admin_access_control'),
+                  selected: _isCurrent(context, '/admin_access_control'),
+              onTap: () => _go(context, '/admin_access_control'),
                 ),
                 ListTile(
                   title: const Text("Configurações da Clínica"),
-                  onTap: () => Navigator.pushNamed(context, '/admin_settings'),
+                  selected: _isCurrent(context, '/admin_settings'),
+              onTap: () => _go(context, '/admin_settings'),
                 ),
                 ListTile(
                   title: const Text("Integrações"),
-                  onTap:
-                      () => Navigator.pushNamed(context, '/admin_integrations'),
+                  selected: _isCurrent(context, '/admin_integrations'),
+              onTap: () => _go(context, '/admin_integrations'),
                 ),
               ],
             ),
@@ -123,19 +122,13 @@ class Sidebar extends StatelessWidget {
               children: [
                 ListTile(
                   title: const Text("Mensagens Internas"),
-                  onTap:
-                      () => Navigator.pushNamed(
-                        context,
-                        '/admin_internal_messages',
-                      ),
+                  selected: _isCurrent(context, '/admin_internal_messages'),
+              onTap: () => _go(context, '/admin_internal_messages'),
                 ),
                 ListTile(
                   title: const Text("Notificações aos Pacientes"),
-                  onTap:
-                      () => Navigator.pushNamed(
-                        context,
-                        '/admin_patient_notifications',
-                      ),
+                  selected: _isCurrent(context, '/admin_patient_notifications'),
+              onTap: () => _go(context, '/admin_patient_notifications'),
                 ),
               ],
             ),
@@ -145,19 +138,13 @@ class Sidebar extends StatelessWidget {
               children: [
                 ListTile(
                   title: const Text("Protocolos Médicos"),
-                  onTap:
-                      () => Navigator.pushNamed(
-                        context,
-                        '/admin_medical_protocols',
-                      ),
+                  selected: _isCurrent(context, '/admin_medical_protocols'),
+              onTap: () => _go(context, '/admin_medical_protocols'),
                 ),
                 ListTile(
                   title: const Text("Documentos da Clínica"),
-                  onTap:
-                      () => Navigator.pushNamed(
-                        context,
-                        '/admin_clinic_documents',
-                      ),
+                  selected: _isCurrent(context, '/admin_clinic_documents'),
+              onTap: () => _go(context, '/admin_clinic_documents'),
                 ),
               ],
             ),
@@ -168,18 +155,20 @@ class Sidebar extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.people),
               title: const Text("Meus Pacientes"),
-              onTap: () => Navigator.pushNamed(context, '/dentist_patients'),
+              selected: _isCurrent(context, '/dentist_patients'),
+              onTap: () => _go(context, '/dentist_patients'),
             ),
             ListTile(
               leading: const Icon(Icons.event),
               title: const Text("Consultas"),
-              onTap:
-                  () => Navigator.pushNamed(context, '/dentist_appointments'),
+              selected: _isCurrent(context, '/dentist_appointments'),
+              onTap: () => _go(context, '/dentist_appointments'),
             ),
             ListTile(
               leading: const Icon(Icons.calendar_today),
               title: const Text("Agenda"),
-              onTap: () => Navigator.pushNamed(context, '/schedule'),
+              selected: _isCurrent(context, '/schedule'),
+              onTap: () => _go(context, '/schedule'),
             ),
           ],
 
@@ -188,17 +177,20 @@ class Sidebar extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.calendar_today),
               title: const Text("Agenda"),
-              onTap: () => Navigator.pushNamed(context, '/schedule'),
+              selected: _isCurrent(context, '/schedule'),
+              onTap: () => _go(context, '/schedule'),
             ),
             ListTile(
               leading: const Icon(Icons.medical_services),
               title: const Text("Procedimentos"),
-              onTap: () => Navigator.pushNamed(context, '/nurse_procedures'),
+              selected: _isCurrent(context, '/nurse_procedures'),
+              onTap: () => _go(context, '/nurse_procedures'),
             ),
             ListTile(
               leading: const Icon(Icons.people),
               title: const Text("Pacientes"),
-              onTap: () => Navigator.pushNamed(context, '/nurse_patients'),
+              selected: _isCurrent(context, '/nurse_patients'),
+              onTap: () => _go(context, '/nurse_patients'),
             ),
           ],
 
@@ -207,25 +199,26 @@ class Sidebar extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.access_time),
               title: const Text("Atendimentos em andamento"),
-              onTap:
-                  () =>
-                      Navigator.pushNamed(context, '/admin_live_consultations'),
+              selected: _isCurrent(context, '/admin_live_consultations'),
+              onTap: () => _go(context, '/admin_live_consultations'),
             ),
             ListTile(
               leading: const Icon(Icons.calendar_today),
               title: const Text("Agenda"),
-              onTap: () => Navigator.pushNamed(context, '/schedule'),
+              selected: _isCurrent(context, '/schedule'),
+              onTap: () => _go(context, '/schedule'),
             ),
             ListTile(
               leading: const Icon(Icons.people),
               title: const Text("Pacientes"),
-              onTap: () => Navigator.pushNamed(context, '/reception_patients'),
+              selected: _isCurrent(context, '/reception_patients'),
+              onTap: () => _go(context, '/reception_patients'),
             ),
             ListTile(
               leading: const Icon(Icons.event),
               title: const Text("Agendamentos"),
-              onTap:
-                  () => Navigator.pushNamed(context, '/reception_appointments'),
+              selected: _isCurrent(context, '/reception_appointments'),
+              onTap: () => _go(context, '/reception_appointments'),
             ),
           ],
         ],
