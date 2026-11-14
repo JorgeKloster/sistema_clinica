@@ -83,4 +83,30 @@ class PatientService {
       throw _apiError("Erro ao atualizar paciente", response);
     }
   }
+
+  /// Alergias, condições e medicamentos: um item por linha. Alterados só pela
+  /// tela de atendimento; o servidor registra quem alterou e quando.
+  static Future<void> updatePatientHealth(
+    int patientId, {
+    required List<String> allergies,
+    required List<String> conditions,
+    required List<String> medications,
+  }) async {
+    final response = await http.put(
+      Uri.parse("http://localhost:8080/patients/health?id=$patientId"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer ${AuthService().token}",
+      },
+      body: jsonEncode({
+        "allergies": allergies.join("\n"),
+        "medical_conditions": conditions.join("\n"),
+        "medications": medications.join("\n"),
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw _apiError("Erro ao salvar as informações de saúde", response);
+    }
+  }
 }

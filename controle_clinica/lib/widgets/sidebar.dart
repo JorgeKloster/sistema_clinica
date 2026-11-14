@@ -205,6 +205,13 @@ class Sidebar extends StatelessWidget {
           // ---------------- Receptionist ----------------
           if (userRole == "receptionist") ...[
             ListTile(
+              leading: const Icon(Icons.access_time),
+              title: const Text("Atendimentos em andamento"),
+              onTap:
+                  () =>
+                      Navigator.pushNamed(context, '/admin_live_consultations'),
+            ),
+            ListTile(
               leading: const Icon(Icons.calendar_today),
               title: const Text("Agenda"),
               onTap: () => Navigator.pushNamed(context, '/schedule'),

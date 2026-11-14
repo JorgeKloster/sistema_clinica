@@ -1,5 +1,6 @@
 import 'package:controle_clinica/pages/common/base_page.dart';
 import 'package:controle_clinica/services/procedure_service.dart';
+import 'package:controle_clinica/services/room_service.dart';
 import 'package:controle_clinica/widgets/confirmation_dialog.dart';
 import 'package:controle_clinica/widgets/form_dialog.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ class _ProceduresPageState extends State<ProceduresPage> {
 
   List<dynamic> procedures = [];
   List<dynamic> filteredProcedures = [];
+  List<dynamic> rooms = [];
   String _query = "";
 
   bool isLoading = true;
@@ -28,6 +30,19 @@ class _ProceduresPageState extends State<ProceduresPage> {
   void initState() {
     super.initState();
     _loadProcedures();
+    _loadRooms();
+  }
+
+  Future<void> _loadRooms() async {
+    try {
+      final data = await RoomService.getRooms();
+
+      if (!mounted) return;
+
+      setState(() => rooms = data);
+    } catch (e) {
+      if (mounted) _showMessage("Erro ao carregar salas: $e");
+    }
   }
 
   Future<void> _loadProcedures() async {
@@ -82,6 +97,10 @@ class _ProceduresPageState extends State<ProceduresPage> {
       (procedure["price"] as num?)?.toDouble() ?? 0;
 
   List<FormFieldConfig> _fields({Map<String, dynamic>? procedure}) {
+    final roomLabels = {
+      for (final r in rooms) "${r["room_id"]}": "${r["name"]} · ${r["room_type_name"]}",
+    };
+
     return [
       FormFieldConfig(
         name: "name",
@@ -104,10 +123,41 @@ class _ProceduresPageState extends State<ProceduresPage> {
         initialValue:
             procedure == null ? null : _priceOf(procedure).toStringAsFixed(2),
       ),
+      FormFieldConfig(
+        name: "duration_minutes",
+        label: "Duração sugerida (minutos)",
+        type: FieldType.integer,
+        required: true,
+        initialValue: "${procedure?["duration_minutes"] ?? 60}",
+      ),
+      FormFieldConfig(
+        name: "room_id",
+        label: "Sala sugerida",
+        type: FieldType.dropdown,
+        required: true,
+        options: roomLabels.keys.toList(),
+        optionLabels: roomLabels,
+        initialValue:
+            roomLabels.containsKey("${procedure?["room_id"]}")
+                ? "${procedure?["room_id"]}"
+                : null,
+      ),
     ];
   }
 
+  /// O dropdown devolve o id como texto; a API espera número.
+  Map<String, dynamic> _withRoom(Map<String, dynamic> values) {
+    return {...values, "room_id": int.parse(values["room_id"].toString())};
+  }
+
   Future<void> _showCreateDialog() async {
+    if (rooms.isEmpty) {
+      _showMessage(
+        "Cadastre ao menos uma sala em Salas e Recursos antes de criar procedimentos",
+      );
+      return;
+    }
+
     await showDialog(
       context: context,
       builder:
@@ -115,7 +165,7 @@ class _ProceduresPageState extends State<ProceduresPage> {
             title: "Adicionar Procedimento",
             fields: _fields(),
             onSubmit: (values) async {
-              await ProcedureService.createProcedure(values);
+              await ProcedureService.createProcedure(_withRoom(values));
 
               await _loadProcedures();
 
@@ -137,7 +187,7 @@ class _ProceduresPageState extends State<ProceduresPage> {
             onSubmit: (values) async {
               await ProcedureService.updateProcedure(
                 procedure["procedure_id"],
-                values,
+                _withRoom(values),
               );
 
               await _loadProcedures();
@@ -246,7 +296,13 @@ class _ProceduresPageState extends State<ProceduresPage> {
       child: ListTile(
         leading: const CircleAvatar(child: Icon(Icons.medical_services)),
         title: Text("${procedure["name"]}"),
-        subtitle: description.isEmpty ? null : Text(description),
+        subtitle: Text(
+          [
+            "${procedure["duration_minutes"] ?? 60} min",
+            "${procedure["room_name"] ?? ""}",
+            if (description.isNotEmpty) description,
+          ].join(" · "),
+        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

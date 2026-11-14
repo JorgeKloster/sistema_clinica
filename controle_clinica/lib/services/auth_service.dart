@@ -29,7 +29,6 @@ class AuthService {
 
       await saveToken(token!);
 
-      print(AuthService().token);
       return true;
     }
     return false;
@@ -53,7 +52,29 @@ class AuthService {
     await loadToken();
   }
 
-  int? get clinicId => currentUser?["clinic_id"];
+  /// Dados do usuário gravados dentro do JWT (user_id, clinic_id, role).
+  /// Servem de reserva quando o app foi reaberto com o token salvo e o
+  /// [currentUser] (preenchido só no login) está vazio.
+  Map<String, dynamic>? _tokenClaims() {
+    final parts = token?.split('.');
 
-  int? get userId => currentUser?["user_id"];
+    if (parts == null || parts.length != 3) return null;
+
+    try {
+      final payload = utf8.decode(
+        base64Url.decode(base64Url.normalize(parts[1])),
+      );
+
+      return jsonDecode(payload) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  int? get clinicId => currentUser?["clinic_id"] ?? _tokenClaims()?["clinic_id"];
+
+  int? get userId => currentUser?["user_id"] ?? _tokenClaims()?["user_id"];
+
+  /// admin | doctor | receptionist
+  String? get role => currentUser?["role"] ?? _tokenClaims()?["role"];
 }

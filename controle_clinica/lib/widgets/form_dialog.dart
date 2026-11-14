@@ -1,7 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-enum FieldType { text, email, phone, date, dropdown, CPF, money, password }
+enum FieldType {
+  text,
+  email,
+  phone,
+  date, // data de nascimento: só aceita datas até hoje
+  dateAny, // data livre (ex.: data de um agendamento)
+  time, // horário HH:mm
+  dropdown,
+  CPF,
+  money,
+  password,
+  multiline,
+  integer, // número inteiro (ex.: minutos)
+}
 
 class FormFieldConfig {
   final String name;
@@ -15,6 +28,16 @@ class FormFieldConfig {
   final Map<String, String>? optionLabels;
   final dynamic initialValue;
 
+  /// Chamado quando o usuário muda este campo (dropdown, data ou horário).
+  /// [values] são os valores atuais do formulário; [setText] altera o texto
+  /// de outro campo de data/horário/texto, ou o valor de um dropdown (ex.:
+  /// sugerir o horário final ou a sala).
+  final void Function(
+    Map<String, dynamic> values,
+    void Function(String field, String text) setText,
+  )?
+  onChanged;
+
   const FormFieldConfig({
     required this.name,
     required this.label,
@@ -23,6 +46,7 @@ class FormFieldConfig {
     this.options,
     this.optionLabels,
     this.initialValue,
+    this.onChanged,
   });
 }
 
@@ -62,10 +86,61 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
 
       if (field.type != FieldType.dropdown) {
         _controllers[field.name] = TextEditingController(
-          text: field.initialValue?.toString() ?? "",
+          text: _displayText(field),
         );
       }
     }
+  }
+
+  static final RegExp _isoDate = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+
+  /// Texto mostrado no campo. Datas guardadas como yyyy-MM-dd aparecem como
+  /// dd/MM/yyyy, igual ao que o seletor de data escreve.
+  String _displayText(FormFieldConfig field) {
+    final initial = field.initialValue?.toString() ?? "";
+
+    if ((field.type == FieldType.date || field.type == FieldType.dateAny) &&
+        _isoDate.hasMatch(initial)) {
+      final parts = initial.split('-');
+      return "${parts[2]}/${parts[1]}/${parts[0]}";
+    }
+
+    return initial;
+  }
+
+  DateTime? _parseIsoDate(dynamic value) {
+    final text = value?.toString() ?? "";
+
+    if (!_isoDate.hasMatch(text)) return null;
+
+    return DateTime.tryParse(text);
+  }
+
+  TimeOfDay? _parseTime(String? text) {
+    final parts = (text ?? "").split(':');
+
+    if (parts.length != 2) return null;
+
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+
+    if (hour == null || minute == null) return null;
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  /// Altera o texto de um campo de data/horário/texto por código.
+  void _setText(String name, String text) {
+    _values[name] = text;
+    _controllers[name]?.text = text;
+
+    // Dropdowns não têm controller: reconstrói para mostrar o novo valor.
+    if (_controllers[name] == null && mounted) setState(() {});
+  }
+
+  void _notify(FormFieldConfig field) {
+    field.onChanged?.call(_values, _setText);
   }
 
   @override
@@ -136,6 +211,14 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
         }
         break;
 
+      case FieldType.integer:
+        final number = int.tryParse(value);
+
+        if (number == null || number <= 0) {
+          return "Número inválido";
+        }
+        break;
+
       case FieldType.password:
         if (value.length < 8) {
           return "A senha deve ter pelo menos 8 caracteres";
@@ -157,8 +240,12 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
         return TextInputType.phone;
       case FieldType.CPF:
         return TextInputType.number;
+      case FieldType.integer:
+        return TextInputType.number;
       case FieldType.money:
         return const TextInputType.numberWithOptions(decimal: true);
+      case FieldType.multiline:
+        return TextInputType.multiline;
       default:
         return TextInputType.text;
     }
@@ -168,13 +255,18 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
     if (field.type == FieldType.money) {
       return double.tryParse((value ?? "").replaceAll(',', '.')) ?? 0;
     }
+    if (field.type == FieldType.integer) {
+      return int.tryParse((value ?? "").trim()) ?? 0;
+    }
     return value;
   }
 
   Widget _buildField(FormFieldConfig field) {
     switch (field.type) {
       case FieldType.date:
+      case FieldType.dateAny:
         final controller = _controllers[field.name]!;
+        final anyDate = field.type == FieldType.dateAny;
 
         return TextFormField(
           controller: controller,
@@ -184,24 +276,74 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
           ).copyWith(suffixIcon: const Icon(Icons.calendar_month)),
           validator: (value) => _validate(field, value),
           onTap: () async {
+            final now = DateTime.now();
+            final firstDate = anyDate ? DateTime(2000) : DateTime(1900);
+            final lastDate = anyDate ? DateTime(2100) : now;
+            var initialDate = _parseIsoDate(_values[field.name]) ?? now;
+
+            if (initialDate.isBefore(firstDate)) initialDate = firstDate;
+            if (initialDate.isAfter(lastDate)) initialDate = lastDate;
+
             final date = await showDatePicker(
               context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime(1900),
-              lastDate: DateTime.now(),
+              initialDate: initialDate,
+              firstDate: firstDate,
+              lastDate: lastDate,
             );
 
             if (date != null) {
-              controller.text = "${date.day}/${date.month}/${date.year}";
+              controller.text = DateFormat('dd/MM/yyyy').format(date);
 
               _values[field.name] = DateFormat('yyyy-MM-dd').format(date);
+
+              _notify(field);
+            }
+          },
+        );
+
+      case FieldType.time:
+        final controller = _controllers[field.name]!;
+
+        return TextFormField(
+          controller: controller,
+          readOnly: true,
+          decoration: _decoration(
+            field.label,
+          ).copyWith(suffixIcon: const Icon(Icons.access_time)),
+          validator: (value) => _validate(field, value),
+          onTap: () async {
+            final picked = await showTimePicker(
+              context: context,
+              initialTime: _parseTime(controller.text) ?? TimeOfDay.now(),
+              builder:
+                  (context, child) => MediaQuery(
+                    data: MediaQuery.of(
+                      context,
+                    ).copyWith(alwaysUse24HourFormat: true),
+                    child: child!,
+                  ),
+            );
+
+            if (picked != null) {
+              final text =
+                  "${picked.hour.toString().padLeft(2, '0')}:"
+                  "${picked.minute.toString().padLeft(2, '0')}";
+
+              controller.text = text;
+              _values[field.name] = text;
+
+              _notify(field);
             }
           },
         );
 
       case FieldType.dropdown:
         return DropdownButtonFormField<String>(
-          initialValue: field.initialValue?.toString(),
+          // A chave acompanha o valor atual: quando o código muda o valor
+          // (setText), o dropdown é recriado já com a nova seleção.
+          key: ValueKey("${field.name}:${_values[field.name]}"),
+          isExpanded: true,
+          initialValue: _values[field.name]?.toString(),
           decoration: _decoration(field.label),
           items:
               field.options!
@@ -221,6 +363,8 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
           },
           onChanged: (value) {
             _values[field.name] = value;
+
+            _notify(field);
           },
         );
 
@@ -229,15 +373,20 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
       case FieldType.phone:
       case FieldType.CPF:
       case FieldType.money:
+      case FieldType.integer:
       case FieldType.password:
+      case FieldType.multiline:
         return TextFormField(
           controller: _controllers[field.name],
           keyboardType: _keyboardFor(field.type),
           obscureText: field.type == FieldType.password,
+          minLines: field.type == FieldType.multiline ? 3 : 1,
+          maxLines: field.type == FieldType.multiline ? 5 : 1,
           decoration: _decoration(field.label).copyWith(
             prefixText: field.type == FieldType.money ? 'R\$ ' : null,
           ),
           validator: (value) => _validate(field, value),
+          onChanged: (_) => _notify(field),
           onSaved: (value) => _values[field.name] = _parseValue(field, value),
         );
     }

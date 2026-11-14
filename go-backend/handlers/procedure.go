@@ -14,17 +14,21 @@ func GetProcedures(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 
 	rows, err := db.DB.Query(`
-        SELECT procedure_id,
-            clinic_id,
-            name,
-            COALESCE(description, ''),
-            COALESCE(price, 0),
-            created_at,
-            updated_at,
-            COALESCE(updated_by, 0)
-        FROM procedure
-        WHERE clinic_id = $1
-        ORDER BY name
+        SELECT p.procedure_id,
+            p.clinic_id,
+            p.name,
+            COALESCE(p.description, ''),
+            COALESCE(p.price, 0),
+            p.duration_minutes,
+            p.room_id,
+            r.name,
+            p.created_at,
+            p.updated_at,
+            COALESCE(p.updated_by, 0)
+        FROM procedure p
+        JOIN room r ON r.room_id = p.room_id
+        WHERE p.clinic_id = $1
+        ORDER BY p.name
     `, claims.ClinicID)
 	if err != nil {
 		log.Printf("GetProcedures: %v", err)
@@ -43,6 +47,9 @@ func GetProcedures(w http.ResponseWriter, r *http.Request) {
 			&p.Name,
 			&p.Description,
 			&p.Price,
+			&p.DurationMinutes,
+			&p.RoomID,
+			&p.RoomName,
 			&p.CreatedAt,
 			&p.UpdatedAt,
 			&p.UpdatedBy,
@@ -68,6 +75,15 @@ func validateProcedure(p *models.Procedure) string {
 	if p.Price < 0 {
 		return "Valor não pode ser negativo"
 	}
+	if p.DurationMinutes == 0 {
+		p.DurationMinutes = 60
+	}
+	if p.DurationMinutes < 5 || p.DurationMinutes > 480 {
+		return "A duração deve ficar entre 5 e 480 minutos"
+	}
+	if p.RoomID <= 0 {
+		return "Selecione a sala do procedimento"
+	}
 	return ""
 }
 
@@ -88,13 +104,21 @@ func CreateProcedure(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// clinic_id e updated_by vêm sempre do token, nunca do corpo da requisição.
-	_, err := db.DB.Exec(`
-        INSERT INTO procedure (clinic_id, name, description, price, updated_by)
-        VALUES ($1, $2, $3, $4, $5)
-    `, claims.ClinicID, p.Name, p.Description, p.Price, claims.UserID)
+	// A sala precisa ser da mesma clínica: o SELECT só devolve linha se for.
+	result, err := db.DB.Exec(`
+        INSERT INTO procedure (clinic_id, name, description, price, duration_minutes, room_id, updated_by)
+        SELECT $1, $2, $3, $4, $5, r.room_id, $7
+        FROM room r
+        WHERE r.room_id = $6 AND r.clinic_id = $1
+    `, claims.ClinicID, p.Name, p.Description, p.Price, p.DurationMinutes, p.RoomID, claims.UserID)
 	if err != nil {
 		log.Printf("CreateProcedure: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if n, _ := result.RowsAffected(); n == 0 {
+		http.Error(w, "Sala inválida", http.StatusBadRequest)
 		return
 	}
 
@@ -128,11 +152,18 @@ func UpdateProcedure(w http.ResponseWriter, r *http.Request) {
             name = $1,
             description = $2,
             price = $3,
-            updated_by = $4
-        WHERE procedure_id = $5
-        AND clinic_id = $6
-    `, p.Name, p.Description, p.Price, claims.UserID, procedureID, claims.ClinicID)
+            duration_minutes = $4,
+            room_id = (SELECT r.room_id FROM room r WHERE r.room_id = $5 AND r.clinic_id = $8),
+            updated_by = $6
+        WHERE procedure_id = $7
+        AND clinic_id = $8
+    `, p.Name, p.Description, p.Price, p.DurationMinutes, p.RoomID, claims.UserID, procedureID, claims.ClinicID)
 	if err != nil {
+		// Sala de outra clínica (ou inexistente) resulta em room_id nulo.
+		if pqErr, ok := pgError(err); ok && pqErr.Code == pgNotNullViolation {
+			http.Error(w, "Sala inválida", http.StatusBadRequest)
+			return
+		}
 		log.Printf("UpdateProcedure: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return

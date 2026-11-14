@@ -7,6 +7,7 @@ import (
 	"go-backend/models"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func GetPatients(w http.ResponseWriter, r *http.Request) {
@@ -19,21 +20,27 @@ func GetPatients(w http.ResponseWriter, r *http.Request) {
 	)
 
 	rows, err := db.DB.Query(`
-        SELECT patient_id,
-            clinic_id,
-            first_name,
-            last_name,
-            birth_date,
-            gender,
-            email,
-            phone,
-            cpf,
-            created_at,
-            updated_at,
-            updated_by
-        FROM patient
-        WHERE clinic_id = $1
-        ORDER BY first_name, last_name
+        SELECT p.patient_id,
+            p.clinic_id,
+            p.first_name,
+            p.last_name,
+            p.birth_date,
+            p.gender,
+            p.email,
+            p.phone,
+            p.cpf,
+            COALESCE(p.allergies, ''),
+            COALESCE(p.medical_conditions, ''),
+            COALESCE(p.medications, ''),
+            COALESCE(to_char(p.health_updated_at, 'YYYY-MM-DD"T"HH24:MI:SS'), ''),
+            COALESCE(btrim(hu.first_name || ' ' || hu.last_name), ''),
+            p.created_at,
+            p.updated_at,
+            p.updated_by
+        FROM patient p
+        LEFT JOIN users hu ON hu.user_id = p.health_updated_by
+        WHERE p.clinic_id = $1
+        ORDER BY p.first_name, p.last_name
     `,
 		claims.ClinicID,
 	)
@@ -64,6 +71,11 @@ func GetPatients(w http.ResponseWriter, r *http.Request) {
 			&p.Email,
 			&p.Phone,
 			&p.CPF,
+			&p.Allergies,
+			&p.MedicalConditions,
+			&p.Medications,
+			&p.HealthUpdatedAt,
+			&p.HealthUpdatedByName,
 			&p.CreatedAt,
 			&p.UpdatedAt,
 			&p.UpdatedBy,
@@ -220,6 +232,76 @@ func UpdatePatient(w http.ResponseWriter, r *http.Request) {
 	}
 	if rows == 0 {
 		http.Error(w, "Patient not found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+// cleanHealthList normaliza um campo de saúde: um item por linha, sem linhas
+// vazias nem espaços sobrando.
+func cleanHealthList(text string) string {
+	items := []string{}
+
+	for _, line := range strings.Split(text, "\n") {
+		if item := strings.TrimSpace(line); item != "" {
+			items = append(items, item)
+		}
+	}
+
+	return strings.Join(items, "\n")
+}
+
+// UpdatePatientHealth grava alergias, condições e medicamentos (um item por
+// linha) e registra quem alterou e quando. Chamado pela tela de atendimento.
+//
+//	PUT /patients/health?id=5
+//	{"allergies": "Dipirona\nLátex", "medical_conditions": "...", "medications": "..."}
+func UpdatePatientHealth(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+
+	patientID, ok := queryID(w, r)
+	if !ok {
+		return
+	}
+
+	var in struct {
+		Allergies         string `json:"allergies"`
+		MedicalConditions string `json:"medical_conditions"`
+		Medications       string `json:"medications"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	result, err := db.DB.Exec(`
+        UPDATE patient
+        SET
+            allergies = NULLIF($1, ''),
+            medical_conditions = NULLIF($2, ''),
+            medications = NULLIF($3, ''),
+            health_updated_at = LOCALTIMESTAMP,
+            health_updated_by = $4,
+            updated_by = $4
+        WHERE patient_id = $5
+        AND clinic_id = $6
+    `,
+		cleanHealthList(in.Allergies),
+		cleanHealthList(in.MedicalConditions),
+		cleanHealthList(in.Medications),
+		claims.UserID,
+		patientID,
+		claims.ClinicID,
+	)
+	if err != nil {
+		log.Printf("UpdatePatientHealth: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if n, _ := result.RowsAffected(); n == 0 {
+		http.Error(w, "Paciente não encontrado", http.StatusNotFound)
 		return
 	}
 

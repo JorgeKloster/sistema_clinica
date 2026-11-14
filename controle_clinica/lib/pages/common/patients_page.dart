@@ -165,6 +165,17 @@ class _PatientsPageState extends State<PatientsPage> {
     );
   }
 
+  Future<void> _openPatient(Map<String, dynamic> patient) async {
+    await Navigator.pushNamed(
+      context,
+      '/patient',
+      arguments: {'patient_id': patient["patient_id"]},
+    );
+
+    // A ficha pode ter mudado (informações de saúde).
+    if (mounted) await _loadPatients();
+  }
+
   Future<void> _showCreateDialog() async {
     await showDialog(
       context: context,
@@ -300,6 +311,7 @@ class _PatientsPageState extends State<PatientsPage> {
                                 horizontal: 4,
                               ),
                               child: ListTile(
+                                onTap: () => _openPatient(patient),
                                 leading: CircleAvatar(
                                   child: Text(patient["first_name"][0]),
                                 ),
@@ -311,10 +323,18 @@ class _PatientsPageState extends State<PatientsPage> {
                                 trailing: PopupMenuButton<String>(
                                   onSelected: (value) async {
                                     switch (value) {
+                                      case 'Ficha':
+                                        _openPatient(patient);
+                                        break;
+
                                       case 'Agendar':
                                         Navigator.pushNamed(
                                           context,
-                                          '/schedule_procedure',
+                                          '/schedule',
+                                          arguments: {
+                                            'patient_id':
+                                                patient["patient_id"],
+                                          },
                                         );
                                         break;
 
@@ -370,6 +390,10 @@ class _PatientsPageState extends State<PatientsPage> {
                                   },
                                   itemBuilder:
                                       (context) => [
+                                        const PopupMenuItem(
+                                          value: 'Ficha',
+                                          child: Text("Ver ficha"),
+                                        ),
                                         const PopupMenuItem(
                                           value: 'Agendar',
                                           child: Text("Agendar procedimento"),

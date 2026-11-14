@@ -197,4 +197,141 @@ func RegisterRoutes() {
 			),
 		),
 	)
+
+	http.Handle(
+		"/appointments/update",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.UpdateAppointment,
+			),
+		),
+	)
+
+	http.Handle(
+		"/appointments/status",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.UpdateAppointmentStatus,
+			),
+		),
+	)
+
+	http.Handle(
+		"/appointments/delete",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.DeleteAppointment,
+			),
+		),
+	)
+
+	http.Handle(
+		"/appointments/get",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.GetAppointment,
+			),
+		),
+	)
+
+	http.Handle(
+		"/appointments/clinical-notes",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.UpdateClinicalNotes,
+			),
+		),
+	)
+
+	http.Handle(
+		"/appointments/history",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.GetPatientHistory,
+			),
+		),
+	)
+
+	http.Handle(
+		"/patients/health",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.UpdatePatientHealth,
+			),
+		),
+	)
+
+	// Rooms
+
+	http.Handle(
+		"/room-types",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.GetRoomTypes,
+			),
+		),
+	)
+
+	http.Handle(
+		"/room-types/create",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.CreateRoomType,
+			),
+		),
+	)
+
+	http.Handle(
+		"/room-types/delete",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.DeleteRoomType,
+			),
+		),
+	)
+
+	http.Handle(
+		"/rooms",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.GetRooms,
+			),
+		),
+	)
+
+	http.Handle(
+		"/rooms/create",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.CreateRoom,
+			),
+		),
+	)
+
+	http.Handle(
+		"/rooms/update",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.UpdateRoom,
+			),
+		),
+	)
+
+	http.Handle(
+		"/rooms/delete",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.DeleteRoom,
+			),
+		),
+	)
+
+	http.Handle(
+		"/rooms/live",
+		middleware.JWTMiddleware(
+			http.HandlerFunc(
+				handlers.GetLiveRooms,
+			),
+		),
+	)
 }
