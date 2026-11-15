@@ -39,7 +39,7 @@ class PatientService {
     final authService = AuthService();
 
     final response = await http.get(
-      Uri.parse("http://localhost:8080/patients"),
+      Uri.parse("$apiBaseUrl/patients"),
       headers: {"Authorization": "Bearer ${authService.token}"},
     );
 
@@ -56,7 +56,7 @@ class PatientService {
     final authService = AuthService();
 
     final response = await http.delete(
-      Uri.parse("http://localhost:8080/patients/delete?id=$patientId"),
+      Uri.parse("$apiBaseUrl/patients/delete?id=$patientId"),
       headers: {"Authorization": "Bearer ${authService.token}"},
     );
 
@@ -72,7 +72,7 @@ class PatientService {
     final authService = AuthService();
 
     final response = await http.put(
-      Uri.parse("http://localhost:8080/patients/update?id=$patientId"),
+      Uri.parse("$apiBaseUrl/patients/update?id=$patientId"),
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer ${authService.token}",
@@ -94,7 +94,7 @@ class PatientService {
     required List<String> medications,
   }) async {
     final response = await http.put(
-      Uri.parse("http://localhost:8080/patients/health?id=$patientId"),
+      Uri.parse("$apiBaseUrl/patients/health?id=$patientId"),
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer ${AuthService().token}",
