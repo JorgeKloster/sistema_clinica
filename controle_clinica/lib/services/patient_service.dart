@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:controle_clinica/services/api_exception.dart';
 import 'package:controle_clinica/services/auth_service.dart';
 import 'package:http/http.dart' as http;
+import '../config.dart';
 
 ApiException _apiError(String fallback, http.Response response) {
   final body = response.body.trim();
@@ -10,7 +11,7 @@ ApiException _apiError(String fallback, http.Response response) {
 
 class PatientService {
   static Future<void> createPatient(Map<String, dynamic> values) async {
-    final url = Uri.parse("http://localhost:8080/patients/create");
+    final url = Uri.parse("$apiBaseUrl/patients/create");
     final authService = AuthService();
     final response = await http.post(
       url,

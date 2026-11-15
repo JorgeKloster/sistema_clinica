@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../config.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -15,7 +16,7 @@ class AuthService {
   String? token;
 
   Future<bool> login(String email, String password) async {
-    final url = Uri.parse("http://localhost:8080/users/login");
+    final url = Uri.parse("$apiBaseUrl/users/login");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -71,7 +72,8 @@ class AuthService {
     }
   }
 
-  int? get clinicId => currentUser?["clinic_id"] ?? _tokenClaims()?["clinic_id"];
+  int? get clinicId =>
+      currentUser?["clinic_id"] ?? _tokenClaims()?["clinic_id"];
 
   int? get userId => currentUser?["user_id"] ?? _tokenClaims()?["user_id"];
 

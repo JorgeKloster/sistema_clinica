@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'package:controle_clinica/services/api_exception.dart';
 import 'package:controle_clinica/services/auth_service.dart';
 import 'package:http/http.dart' as http;
+import '../config.dart';
 
 /// Profissionais = usuários da clínica (tabela `users`).
 class ProfessionalService {
-  static const String _baseUrl = "http://localhost:8080";
+  static const String _baseUrl = apiBaseUrl;
 
   static Map<String, String> get _headers => {
     "Content-Type": "application/json",
