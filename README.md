@@ -1,4 +1,4 @@
-# Bucalle: Sistema de Controle para Clínicas Integradas
+# Sistema Clínica
 
 Sistema web e multiplataforma para a gestão do dia a dia de clínicas que reúnem várias especialidades da saúde (odontologia, fisioterapia, nutrição, psicologia etc.) no mesmo espaço. Ele centraliza agenda, pacientes, profissionais, procedimentos, salas e o registro dos atendimentos.
 
@@ -22,7 +22,7 @@ Sistema web e multiplataforma para a gestão do dia a dia de clínicas que reún
 
 ## 1. Descrição do projeto
 
-O **Bucalle** é composto por três partes:
+O **Sistema Clínica** é composto por três partes:
 
 - **Aplicativo cliente (Flutter):** interface usada por administradores, profissionais de saúde e recepcionistas. Roda no navegador (Flutter Web) e também pode ser compilado para Windows, macOS, Android e iOS.
 - **API REST (Go):** concentra as regras de negócio, a autenticação por JWT e o controle de acesso por perfil.
@@ -316,7 +316,7 @@ flowchart LR
     PRO([👤 Profissional de saúde])
     REC([👤 Recepcionista])
 
-    subgraph Sistema["Sistema Bucalle"]
+    subgraph Sistema["Sistema Clínica"]
         UC01(UC01 Cadastro inicial)
         UC02(UC02 Autenticar-se)
         UC03(UC03 Gerenciar profissionais)
