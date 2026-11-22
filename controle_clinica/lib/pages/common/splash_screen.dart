@@ -21,9 +21,10 @@ class _SplashScreenState extends State<SplashScreen>
     curve: const Interval(0, 0.8, curve: Curves.easeOut),
   );
 
-  late final Animation<double> _scale = Tween<double>(begin: 0.92, end: 1).animate(
-    CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-  );
+  late final Animation<double> _scale = Tween<double>(
+    begin: 0.92,
+    end: 1,
+  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
   @override
   void initState() {
@@ -49,9 +50,11 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!mounted) return;
 
-    if (authService.token != null) {
+    if (authService.hasValidToken) {
       Navigator.pushReplacementNamed(context, '/dentist_home');
     } else {
+      await authService.clearToken();
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/login');
     }
   }

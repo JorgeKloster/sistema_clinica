@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:controle_clinica/services/api_exception.dart';
 import 'package:controle_clinica/services/auth_service.dart';
-import 'package:http/http.dart' as http;
+import 'api_http.dart' as http;
 import '../config.dart';
 
 class ProcedureService {

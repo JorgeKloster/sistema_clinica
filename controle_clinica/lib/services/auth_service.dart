@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:controle_clinica/navigation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config.dart';
@@ -78,6 +79,21 @@ class AuthService {
     } catch (_) {
       return null;
     }
+  }
+
+  bool get hasValidToken {
+    final exp = _tokenClaims()?["exp"];
+    if (exp is! int) return false;
+    final expiresAt = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+    return DateTime.now().isBefore(expiresAt);
+  }
+
+  /// Called when the API answers 401: clears the session and goes to login.
+  Future<void> handleUnauthorized() async {
+    if (token == null)
+      return; // already handled (several requests can fail at once)
+    await clearToken();
+    navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (_) => false);
   }
 
   int? get clinicId =>
