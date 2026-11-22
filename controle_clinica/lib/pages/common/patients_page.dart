@@ -2,6 +2,7 @@ import 'package:controle_clinica/pages/common/base_page.dart';
 import 'package:controle_clinica/services/patient_service.dart';
 import 'package:controle_clinica/theme/app_theme.dart';
 import 'package:controle_clinica/widgets/confirmation_dialog.dart';
+import 'package:controle_clinica/utils/formatters.dart';
 import 'package:controle_clinica/widgets/form_dialog.dart';
 import 'package:flutter/material.dart';
 
@@ -318,7 +319,7 @@ class _PatientsPageState extends State<PatientsPage> {
                                 ),
                                 title: Text("$firstName $lastName"),
                                 subtitle: Text(
-                                  "${patient["cpf"]}\n${patient["phone"]}",
+                                  "${formatCpf(patient["cpf"])}\n${formatPhone(patient["phone"])}",
                                 ),
                                 isThreeLine: true,
                                 trailing: PopupMenuButton<String>(

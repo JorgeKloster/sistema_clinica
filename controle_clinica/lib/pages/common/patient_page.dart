@@ -1,5 +1,6 @@
 import 'package:controle_clinica/pages/common/base_page.dart';
 import 'package:controle_clinica/services/patient_service.dart';
+import 'package:controle_clinica/utils/formatters.dart';
 import 'package:controle_clinica/widgets/patient_health.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -169,8 +170,8 @@ class _PatientPageState extends State<PatientPage> {
                 children: [
                   _info("Nascimento", _birthText(text("birth_date"))),
                   _info("Sexo", text("gender")),
-                  _info("CPF", text("cpf")),
-                  _info("Telefone", text("phone")),
+                  _info("CPF", formatCpf(text("cpf"))),
+                  _info("Telefone", formatPhone(text("phone"))),
                   _info("E-mail", text("email")),
                 ],
               ),

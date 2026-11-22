@@ -10,7 +10,7 @@ services:
       DB_SSLMODE: disable
       JWT_SECRET: ${JWT_SECRET}
       CLINIC_TIMEZONE: America/Sao_Paulo
-    depends_on: [db]
+    depends_on: [ db ]
     restart: unless-stopped
     profiles: [ "prod" ]
 
@@ -22,6 +22,9 @@ services:
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
+      DB_SSLMODE: disable
+      JWT_SECRET: ${JWT_SECRET}
+      CLINIC_TIMEZONE: America/Sao_Paulo
     ports:
       - "8080:8080"
     depends_on:
@@ -75,13 +78,13 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-       - ./web:/srv:ro
-       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-       - caddy_data:/data
-       - caddy_config:/config
-    depends_on: [backend]
+      - ./web:/srv:ro
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [ backend ]
     restart: unless-stopped
-    profiles: ["prod"]
+    profiles: [ "prod" ]
 
 volumes:
   pgdata:

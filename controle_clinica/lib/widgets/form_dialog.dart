@@ -1,3 +1,4 @@
+import 'package:controle_clinica/utils/formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -98,6 +99,9 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
   /// dd/MM/yyyy, igual ao que o seletor de data escreve.
   String _displayText(FormFieldConfig field) {
     final initial = field.initialValue?.toString() ?? "";
+
+    if (field.type == FieldType.CPF) return formatCpf(initial);
+    if (field.type == FieldType.phone) return formatPhone(initial);
 
     if ((field.type == FieldType.date || field.type == FieldType.dateAny) &&
         _isoDate.hasMatch(initial)) {
@@ -239,6 +243,10 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
   }
 
   dynamic _parseValue(FormFieldConfig field, String? value) {
+    // CPF e telefone aparecem formatados, mas a API recebe só os dígitos.
+    if (field.type == FieldType.CPF || field.type == FieldType.phone) {
+      return onlyDigits(value);
+    }
     if (field.type == FieldType.money) {
       return double.tryParse((value ?? "").replaceAll(',', '.')) ?? 0;
     }
@@ -366,6 +374,12 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
         return TextFormField(
           controller: _controllers[field.name],
           keyboardType: _keyboardFor(field.type),
+          inputFormatters:
+              field.type == FieldType.CPF
+                  ? [cpfMask]
+                  : field.type == FieldType.phone
+                  ? [phoneMask]
+                  : null,
           obscureText: field.type == FieldType.password,
           minLines: field.type == FieldType.multiline ? 3 : 1,
           maxLines: field.type == FieldType.multiline ? 5 : 1,

@@ -4,6 +4,7 @@ import 'package:controle_clinica/services/professional_service.dart';
 import 'package:controle_clinica/services/specialty_service.dart';
 import 'package:controle_clinica/theme/app_theme.dart';
 import 'package:controle_clinica/widgets/confirmation_dialog.dart';
+import 'package:controle_clinica/utils/formatters.dart';
 import 'package:controle_clinica/widgets/form_dialog.dart';
 import 'package:controle_clinica/widgets/specialties_dialog.dart';
 import 'package:flutter/material.dart';
@@ -339,7 +340,7 @@ class _ProfessionalsPageState extends State<ProfessionalsPage> {
     final lastName = professional["last_name"] ?? "";
     final role = _roleLabels[professional["role"]] ?? professional["role"];
     final specialty = (professional["specialty"] ?? "").toString();
-    final phone = (professional["phone"] ?? "").toString();
+    final phone = formatPhone(professional["phone"]?.toString());
 
     final line1 = specialty.isEmpty ? "$role" : "$role • $specialty";
     final line2 =
