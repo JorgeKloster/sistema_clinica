@@ -2,10 +2,35 @@
 
 Sistema web e multiplataforma para a gestão do dia a dia de clínicas que reúnem várias especialidades da saúde (odontologia, fisioterapia, nutrição, psicologia etc.) no mesmo espaço. Ele centraliza agenda, pacientes, profissionais, procedimentos, salas e o registro dos atendimentos.
 
+> [!IMPORTANT]
+> **O sistema está hospedado e disponível online em: https://clinica-jfk.duckdns.org/**
+>
+> Não é preciso instalar nada para avaliá-lo: basta abrir o endereço no navegador e entrar com o usuário de acesso abaixo.
+
+## Acesso para avaliação
+
+| | |
+|---|---|
+| **Endereço** | https://clinica-jfk.duckdns.org/ |
+| **E-mail** | `banca@clinica.com` |
+| **Senha** | `Banca@2026` |
+| **Perfil** | Administrador (acesso a todas as funcionalidades) |
+
+**O que é possível testar com esse usuário:**
+
+- Cadastrar salas, procedimentos, profissionais e pacientes em **Gerenciamento**.
+- Criar, confirmar, editar e cancelar agendamentos na **Agenda**. Para ver o bloqueio de conflitos, tente marcar o mesmo profissional ou a mesma sala em horários sobrepostos.
+- Abrir um agendamento, iniciar o atendimento, registrar anotações clínicas e finalizar.
+- Acompanhar as salas em uso no painel **Atendimentos em andamento**.
+- Criar usuários com os perfis de profissional de saúde e de recepcionista para testar o sistema com cada perfil.
+
+> O ambiente online roda em um servidor VPS, com Docker Compose e HTTPS automático pelo Caddy (detalhes na seção [8.8](#88-implantação-em-produção-perfil-prod)). Para rodar o projeto na sua máquina, siga a seção [8](#8-como-executar-o-projeto).
+
 ---
 
 ## Sumário
 
+0. [Acesso para avaliação](#acesso-para-avaliação)
 1. [Descrição do projeto](#1-descrição-do-projeto)
 2. [Problema](#2-problema)
 3. [Justificativa](#3-justificativa)
@@ -113,7 +138,7 @@ O projeto é importante porque trata de pontos que afetam diretamente a qualidad
 |---|---|
 | **Docker** e **Docker Compose** | Contêineres do back-end, banco, migrations e servidor web, com perfis `dev` e `prod` |
 | **Caddy 2** | Servidor web e proxy reverso, com HTTPS automático. Entrega o Flutter Web e encaminha `/api/*` para o back-end |
-| **DuckDNS** | Domínio dinâmico usado no ambiente de produção (VPS) |
+| **DuckDNS** | Domínio do ambiente de produção na VPS: [clinica-jfk.duckdns.org](https://clinica-jfk.duckdns.org/) |
 
 ---
 
@@ -678,6 +703,8 @@ go run main.go
 > Pare o contêiner `backend-local` antes, para liberar a porta 8080.
 
 ### 8.8 Implantação em produção (perfil `prod`)
+
+A versão em produção está no ar em **https://clinica-jfk.duckdns.org/**, implantada com os passos abaixo.
 
 O perfil `prod` sobe o banco (sem expor a porta), as migrations, a API (sem expor a porta) e o **Caddy**, que entrega o Flutter Web com HTTPS automático e encaminha `/api/*` para a API.
 
