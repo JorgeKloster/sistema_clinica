@@ -588,10 +588,19 @@ class _SchedulePageState extends State<SchedulePage> {
             ? DateTime.now()
             : _weekStart);
 
-    final DateTime startTime =
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    var startTime =
         appointment?.start ??
         start ??
         DateTime(base.year, base.month, base.day, 9);
+
+    // Agendamento novo nunca começa no passado: usa a próxima meia hora.
+    if (!editing && startTime.isBefore(now)) {
+      final halfHours = (now.hour * 60 + now.minute) ~/ 30 + 1;
+      startTime = today.add(Duration(minutes: halfHours * 30));
+    }
 
     final DateTime endTime =
         appointment?.end ?? startTime.add(const Duration(hours: 1));
@@ -701,6 +710,7 @@ class _SchedulePageState extends State<SchedulePage> {
         label: "Data",
         type: FieldType.dateAny,
         required: true,
+        firstDate: today,
         initialValue: DateFormat('yyyy-MM-dd').format(startTime),
       ),
       FormFieldConfig(
@@ -773,6 +783,21 @@ class _SchedulePageState extends State<SchedulePage> {
                 throw ApiException("O horário final deve ser depois do inicial");
               }
 
+              // Um agendamento que já passou pode ser editado, mas nenhum
+              // agendamento pode ser criado ou movido para o passado.
+              final movedOrNew = !editing || startsAt != appointment.start;
+              final nowMinute = DateTime.now().copyWith(
+                second: 0,
+                millisecond: 0,
+                microsecond: 0,
+              );
+
+              if (movedOrNew && startsAt.isBefore(nowMinute)) {
+                throw ApiException(
+                  "Não é possível agendar em uma data ou horário que já passou",
+                );
+              }
+
               final body = <String, dynamic>{
                 "patient_id": int.parse(values["patient_id"].toString()),
                 "doctor_id": int.parse(values["doctor_id"].toString()),
@@ -834,7 +859,18 @@ class _SchedulePageState extends State<SchedulePage> {
                       showDoctor: _doctorFilter == "all",
                       selectedId: _selected?.id,
                       onSelect: (a) => setState(() => _selected = a),
-                      onSlotTap: (slot) => _showForm(start: slot),
+                      onSlotTap: (slot) {
+                        // Cada faixa da grade tem 30 minutos: a faixa atual
+                        // ainda abre o formulário, as anteriores não.
+                        final slotEnd = slot.add(const Duration(minutes: 30));
+
+                        if (!slotEnd.isAfter(DateTime.now())) {
+                          _showMessage("Esse horário já passou");
+                          return;
+                        }
+
+                        _showForm(start: slot);
+                      },
                     ),
                     if (!_loading && _appointments.isEmpty)
                       const Padding(

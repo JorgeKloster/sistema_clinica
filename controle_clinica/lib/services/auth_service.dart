@@ -29,6 +29,7 @@ class AuthService {
       currentUser = data["user"];
 
       await saveToken(token!);
+      await _storage.write(key: "current_user", value: jsonEncode(currentUser));
 
       return true;
     }
@@ -42,11 +43,18 @@ class AuthService {
 
   Future<void> loadToken() async {
     token = await _storage.read(key: "jwt_token");
+
+    final savedUser = await _storage.read(key: "current_user");
+    if (token != null && savedUser != null) {
+      currentUser = jsonDecode(savedUser) as Map<String, dynamic>;
+    }
   }
 
   Future<void> clearToken() async {
     token = null;
+    currentUser = null;
     await _storage.delete(key: "jwt_token");
+    await _storage.delete(key: "current_user");
   }
 
   Future<void> initialize() async {

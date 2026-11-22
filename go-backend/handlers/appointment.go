@@ -20,6 +20,8 @@ const (
 
 	// A agenda busca uma semana por vez; o limite evita consultas enormes.
 	maxListRangeDays = 62
+
+	msgPastAppointment = "Não é possível agendar em uma data ou horário que já passou"
 )
 
 var validAppointmentStatuses = map[string]bool{
@@ -438,6 +440,10 @@ func CreateAppointment(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
+	if isPastLocal(in.StartsAt) {
+		http.Error(w, msgPastAppointment, http.StatusBadRequest)
+		return
+	}
 
 	msg, err := checkAppointmentRefs(claims.ClinicID, &in)
 	if err != nil {
@@ -482,6 +488,29 @@ func UpdateAppointment(w http.ResponseWriter, r *http.Request) {
 	// Status vazio na edição = manter o atual.
 	if msg := in.normalize(""); msg != "" {
 		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+
+	// Agendamentos que já passaram podem ser corrigidos (procedimento,
+	// observações, status...), mas nenhum pode ser movido para o passado.
+	var currentStart string
+	err := db.DB.QueryRow(`
+        SELECT to_char(starts_at, 'YYYY-MM-DD"T"HH24:MI:SS')
+        FROM appointment
+        WHERE appointment_id = $1
+        AND clinic_id = $2
+    `, appointmentID, claims.ClinicID).Scan(&currentStart)
+	if errors.Is(err, sql.ErrNoRows) {
+		http.Error(w, "Agendamento não encontrado", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		log.Printf("UpdateAppointment current start: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	if in.StartsAt != currentStart && isPastLocal(in.StartsAt) {
+		http.Error(w, msgPastAppointment, http.StatusBadRequest)
 		return
 	}
 

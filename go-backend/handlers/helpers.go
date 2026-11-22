@@ -93,6 +93,15 @@ func clinicNow() string {
 	return time.Now().In(clinicLocation()).Format(appointmentTimeLayout)
 }
 
+// isPastLocal diz se um horário local da clínica (formato do banco) já
+// passou. A precisão é de minuto: o minuto atual ainda conta como livre.
+// Os dois lados estão no mesmo formato, então comparar texto basta.
+func isPastLocal(local string) bool {
+	now := time.Now().In(clinicLocation()).Truncate(time.Minute)
+
+	return local < now.Format(appointmentTimeLayout)
+}
+
 // elapsedSince devolve os segundos desde um horário local da clínica.
 func elapsedSince(local string) int {
 	t, err := time.ParseInLocation(appointmentTimeLayout, local, clinicLocation())

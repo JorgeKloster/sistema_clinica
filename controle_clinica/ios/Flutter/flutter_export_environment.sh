@@ -1,8 +1,8 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
-export "FLUTTER_ROOT=C:\flutter"
-export "FLUTTER_APPLICATION_PATH=E:\Projetos Pessoais\sistema-controle-clinica\controle_clinica"
-export "FLUTTER_FRAMEWORK_SWIFT_PACKAGE_PATH=E:\Projetos Pessoais\sistema-controle-clinica\controle_clinica\ios\Flutter\ephemeral\Packages\.packages\FlutterFramework"
+export "FLUTTER_ROOT=C:\Users\jfklo\Flutter\flutter"
+export "FLUTTER_APPLICATION_PATH=C:\Users\jfklo\projetoSistemaClinica\sistema_clinica\controle_clinica"
+export "FLUTTER_FRAMEWORK_SWIFT_PACKAGE_PATH=C:\Users\jfklo\projetoSistemaClinica\sistema_clinica\controle_clinica\ios\Flutter\ephemeral\Packages\.packages\FlutterFramework"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
 export "FLUTTER_TARGET=lib\main.dart"
 export "FLUTTER_BUILD_DIR=build"

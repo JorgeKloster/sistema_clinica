@@ -29,6 +29,10 @@ class FormFieldConfig {
   final Map<String, String>? optionLabels;
   final dynamic initialValue;
 
+  /// Primeira data que o seletor deixa escolher (só para [FieldType.dateAny]).
+  /// Ex.: hoje, para não permitir agendamentos em dias que já passaram.
+  final DateTime? firstDate;
+
   /// Chamado quando o usuário muda este campo (dropdown, data ou horário).
   /// [values] são os valores atuais do formulário; [setText] altera o texto
   /// de outro campo de data/horário/texto, ou o valor de um dropdown (ex.:
@@ -47,6 +51,7 @@ class FormFieldConfig {
     this.options,
     this.optionLabels,
     this.initialValue,
+    this.firstDate,
     this.onChanged,
   });
 }
@@ -272,7 +277,8 @@ class _EntityFormDialogState extends State<EntityFormDialog> {
           validator: (value) => _validate(field, value),
           onTap: () async {
             final now = DateTime.now();
-            final firstDate = anyDate ? DateTime(2000) : DateTime(1900);
+            final firstDate =
+                anyDate ? (field.firstDate ?? DateTime(2000)) : DateTime(1900);
             final lastDate = anyDate ? DateTime(2100) : now;
             var initialDate = _parseIsoDate(_values[field.name]) ?? now;
 
